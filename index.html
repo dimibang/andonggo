@@ -278,7 +278,7 @@
             <div class="summary-value" id="grade-total">0명</div>
           </div>
           <div class="summary-box">
-            <div class="summary-label">지구별 계</div>
+            <div class="summary-label">지회별 계</div>
             <div class="summary-value" id="region-total">0명</div>
           </div>
         </div>
@@ -286,7 +286,7 @@
 
       <div class="card">
         <div class="tab-nav">
-          <button class="tab-btn active" onclick="switchTab('region')">지구별 현황</button>
+          <button class="tab-btn active" onclick="switchTab('region')">지회별 현황</button>
           <button class="tab-btn" onclick="switchTab('grade')">기수별 현황</button>
         </div>
 
@@ -295,7 +295,7 @@
             <table>
               <thead>
                 <tr>
-                  <th>지구명</th>
+                  <th>지회명</th>
                   <th>신청(명)</th>
                 </tr>
               </thead>
@@ -334,21 +334,21 @@
   </div>
 
   <script>
-    // 1. 지구별 기본 데이터 (13개 지구)
+    // 1. 지회별 기본 데이터 (13개 지회)
     const regionData = [
-      { name: "안동", target: 300, current: 0, meal: 0 },
-      { name: "대구", target: 150, current: 0, meal: 0 },
-      { name: "서울/수도권", target: 200, current: 0, meal: 0 },
-      { name: "부산/경남", target: 80, current: 0, meal: 0 },
-      { name: "포항", target: 50, current: 0, meal: 0 },
-      { name: "구미", target: 60, current: 0, meal: 0 },
-      { name: "영주", target: 40, current: 0, meal: 0 },
-      { name: "문경/상주", target: 30, current: 0, meal: 0 },
-      { name: "예천", target: 30, current: 0, meal: 0 },
-      { name: "의성", target: 25, current: 0, meal: 0 },
-      { name: "청송/영양", target: 20, current: 0, meal: 0 },
-      { name: "울진/영덕", target: 20, current: 0, meal: 0 },
-      { name: "기타/해외", target: 15, current: 0, meal: 0 }
+      { name: "안동지회", current: 0 },
+      { name: "재경지회", current: 0 },
+      { name: "부산지회", current: 0 },
+      { name: "대구지회", current: 0 },
+      { name: "대전지회", current: 0 },
+      { name: "울산지회", current: 0 },
+      { name: "영주지회", current: 0 },
+      { name: "구미지회", current: 0 },
+      { name: "창원지회", current: 0 },
+      { name: "문경지회", current: 0 },
+      { name: "경주지회", current: 0 },
+      { name: "안동시청 동문회", current: 0 },
+      { name: "기타", current: 0 }
     ];
 
     // 2. 기수별 데이터 (1회 ~ 75회 자동 생성)
@@ -381,7 +381,7 @@
       const regionTotal = regionData.reduce((sum, item) => sum + item.current, 0);
       const gradeTotal = gradeData.reduce((sum, item) => sum + item.current, 0);
 
-      // 1. 지구별 현황 + 마지막 계
+      // 1. 지회별 현황 + 마지막 계
       const regionTbody = document.getElementById('region-tbody');
       regionTbody.innerHTML = regionData.map(item => `
         <tr>
@@ -410,7 +410,7 @@
       `;
 
       // 3. 실시간 접수 현황 요약
-      // 동일한 신청 원장을 지구별/기수별로 각각 집계하므로 정상 연결 시 세 값은 같다.
+      // 동일한 신청 원장을 지회별/기수별로 각각 집계하므로 정상 연결 시 세 값은 같다.
       document.getElementById('total-count').innerText = regionTotal + '명';
       document.getElementById('grade-total').innerText = gradeTotal + '명';
       document.getElementById('region-total').innerText = regionTotal + '명';
