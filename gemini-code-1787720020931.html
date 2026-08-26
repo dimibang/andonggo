@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>안동고등학교 개교 75주년 대축제 현황</title>
+  
+  <meta property="og:title" content="[안동고] 개교 75주년 대축제 참석 신청 및 현황" />
+  <meta property="og:description" content="2026. 10. 10.(토) 안동체육관 | 실시간 접수 현황 보기" />
+  <meta property="og:image" content="./KakaoTalk_20260819_161509609.jpg" />
+
+  <style>
+    :root {
+      --primary-color: #0b4da2;
+      --accent-color: #e02b20;
+      --bg-glass: rgba(255, 255, 255, 0.92);
+      --text-main: #1f2937;
+      --text-sub: #4b5563;
+      --border-color: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", Roboto, "Noto Sans KR", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #0f172a;
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    /* 모바일 컨테이너 */
+    .container {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      background: url('./KakaoTalk_20260819_161509609.jpg') no-repeat top center;
+      background-size: contain;
+      background-color: #f1f5f9;
+      position: relative;
+      padding-bottom: 90px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.3);
+    }
+
+    /* 포스터 상단 영역 확보용 스페이서 */
+    .poster-hero {
+      width: 100%;
+      height: 380px;
+    }
+
+    /* 메인 컨텐츠 영역 */
+    .content-wrap {
+      padding: 0 16px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* 신청하기 버튼 (상단 메인 CTA) */
+    .btn-apply-main {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: linear-gradient(135deg, #e02b20 0%, #b91c1c 100%);
+      color: #ffffff;
+      font-size: 1.15rem;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 16px 20px;
+      border-radius: 14px;
+      box-shadow: 0 8px 20px rgba(224, 43, 32, 0.4);
+      margin-bottom: 20px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .btn-apply-main:active {
+      transform: scale(0.98);
+      box-shadow: 0 4px 10px rgba(224, 43, 32, 0.3);
+    }
+
+    /* 카드 베이스 스타일 (Glassmorphism) */
+    .card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+    }
+
+    /* 헤더 텍스트 */
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    /* 전체 종합 현황 카드 */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+    .summary-box {
+      background: #ffffff;
+      padding: 12px 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+    .summary-label {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      margin-bottom: 4px;
+    }
+    .summary-value {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .summary-value.highlight {
+      color: var(--primary-color);
+    }
+
+    /* 탭 네비게이션 */
+    .tab-nav {
+      display: flex;
+      background: #e2e8f0;
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 14px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 0;
+      border: none;
+      background: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-sub);
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--primary-color);
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    /* 테이블 스타일 */
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .table-container {
+      max-height: 400px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: center;
+      font-size: 0.88rem;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #f8fafc;
+      color: var(--text-sub);
+      font-weight: 600;
+      padding: 10px 6px;
+      border-bottom: 1px solid var(--border-color);
+      z-index: 2;
+    }
+    tbody td {
+      padding: 10px 6px;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--text-main);
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+    .highlight-name {
+      font-weight: 600;
+      color: #1e3a8a;
+    }
+    .progress-pill {
+      font-weight: 700;
+      color: #059669;
+      background: #ecfdf5;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+    }
+
+    /* 하단 고정 신청 바 (스크롤 시 편의용) */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 16px;
+      border-top: 1px solid var(--border-color);
+      box-shadow: 0 -4px 15px rgba(0,0,0,0.06);
+      z-index: 100;
+    }
+    .btn-apply-bottom {
+      display: block;
+      width: 100%;
+      background: var(--primary-color);
+      color: #ffffff;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 14px 0;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(11, 77, 162, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="poster-hero"></div>
+
+    <div class="content-wrap">
+      
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSd5bh2hdk7dTFFIwamIilL0oMP4k6IyH2mhkoBXNUykuuRoaw/viewform?usp=header" 
+         target="_blank" 
+         class="btn-apply-main">
+        <span>📝</span> 개교 75주년 참석 신청하기
+      </a>
+
+      <div class="card">
+        <div class="card-title">
+          <span>📊</span> 실시간 접수 현황 요약
+        </div>
+        <div class="summary-grid">
+          <div class="summary-box">
+            <div class="summary-label">총 신청 인원</div>
+            <div class="summary-value highlight" id="total-count">0명</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">목표 대비</div>
+            <div class="summary-value" id="total-rate">0%</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">예상 식사 인원</div>
+            <div class="summary-value" id="total-meal">0명</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="tab-nav">
+          <button class="tab-btn active" onclick="switchTab('region')">지구별 현황</button>
+          <button class="tab-btn" onclick="switchTab('grade')">기수별 현황</button>
+        </div>
+
+        <div id="tab-region" class="tab-content active">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>지구명</th>
+                  <th>목표</th>
+                  <th>신청(명)</th>
+                  <th>달성률</th>
+                </tr>
+              </thead>
+              <tbody id="region-tbody">
+                </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-grade" class="tab-content">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>기수</th>
+                  <th>목표</th>
+                  <th>신청(명)</th>
+                  <th>달성률</th>
+                </tr>
+              </thead>
+              <tbody id="grade-tbody">
+                </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSd5bh2hdk7dTFFIwamIilL0oMP4k6IyH2mhkoBXNUykuuRoaw/viewform?usp=header" 
+       target="_blank" 
+       class="btn-apply-bottom">
+      참석 신청하기 (구글 설문)
+    </a>
+  </div>
+
+  <script>
+    // 1. 지구별 기본 데이터 (13개 지구)
+    const regionData = [
+      { name: "안동", target: 300, current: 0, meal: 0 },
+      { name: "대구", target: 150, current: 0, meal: 0 },
+      { name: "서울/수도권", target: 200, current: 0, meal: 0 },
+      { name: "부산/경남", target: 80, current: 0, meal: 0 },
+      { name: "포항", target: 50, current: 0, meal: 0 },
+      { name: "구미", target: 60, current: 0, meal: 0 },
+      { name: "영주", target: 40, current: 0, meal: 0 },
+      { name: "문경/상주", target: 30, current: 0, meal: 0 },
+      { name: "예천", target: 30, current: 0, meal: 0 },
+      { name: "의성", target: 25, current: 0, meal: 0 },
+      { name: "청송/영양", target: 20, current: 0, meal: 0 },
+      { name: "울진/영덕", target: 20, current: 0, meal: 0 },
+      { name: "기타/해외", target: 15, current: 0, meal: 0 }
+    ];
+
+    // 2. 기수별 데이터 (1회 ~ 75회 자동 생성)
+    const gradeData = [];
+    for (let i = 1; i <= 75; i++) {
+      gradeData.push({
+        name: i + "회",
+        target: 20, // 기본 목표치
+        current: 0,
+        meal: 0
+      });
+    }
+
+    // 탭 전환 함수
+    function switchTab(type) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+      if (type === 'region') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('tab-region').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('tab-grade').classList.add('active');
+      }
+    }
+
+    // 데이터 렌더링 함수
+    function renderTables() {
+      // 1. 지구별 렌더링
+      const regionTbody = document.getElementById('region-tbody');
+      regionTbody.innerHTML = regionData.map(item => {
+        const rate = item.target > 0 ? Math.round((item.current / item.target) * 100) : 0;
+        return `
+          <tr>
+            <td class="highlight-name">${item.name}</td>
+            <td>${item.target}</td>
+            <td><strong>${item.current}</strong></td>
+            <td><span class="progress-pill">${rate}%</span></td>
+          </tr>
+        `;
+      }).join('');
+
+      // 2. 기수별 렌더링
+      const gradeTbody = document.getElementById('grade-tbody');
+      gradeTbody.innerHTML = gradeData.map(item => {
+        const rate = item.target > 0 ? Math.round((item.current / item.target) * 100) : 0;
+        return `
+          <tr>
+            <td class="highlight-name">${item.name}</td>
+            <td>${item.target}</td>
+            <td><strong>${item.current}</strong></td>
+            <td><span class="progress-pill">${rate}%</span></td>
+          </tr>
+        `;
+      }).join('');
+
+      // 3. 상단 종합 요약 계산
+      const totalTarget = regionData.reduce((acc, cur) => acc + cur.target, 0);
+      const totalCurrent = regionData.reduce((acc, cur) => acc + cur.current, 0);
+      const totalMeal = regionData.reduce((acc, cur) => acc + cur.meal, 0);
+      const totalRate = totalTarget > 0 ? Math.round((totalCurrent / totalTarget) * 100) : 0;
+
+      document.getElementById('total-count').innerText = totalCurrent + '명';
+      document.getElementById('total-rate').innerText = totalRate + '%';
+      document.getElementById('total-meal').innerText = totalMeal + '명';
+    }
+
+    // 초기 실행
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTables();
+    });
+  </script>
+</body>
+</html>
