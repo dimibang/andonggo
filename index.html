@@ -243,6 +243,12 @@
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(11, 77, 162, 0.3);
     }
+
+    .total-row td {
+      font-weight: 800;
+      background: #eef4fb;
+      border-top: 2px solid var(--primary-color);
+    }
   </style>
 </head>
 <body>
@@ -252,7 +258,7 @@
 
     <div class="content-wrap">
       
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLSd5bh2hdk7dTFFIwamIilL0oMP4k6IyH2mhkoBXNUykuuRoaw/viewform?usp=header" 
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSd5bh2hdk7dTFFIwamIilL0oMP4k6IyH2mhkoBXNUykuuRoaw/viewform" 
          target="_blank" 
          class="btn-apply-main">
         <span>📝</span> 개교 75주년 참석 신청하기
@@ -268,12 +274,12 @@
             <div class="summary-value highlight" id="total-count">0명</div>
           </div>
           <div class="summary-box">
-            <div class="summary-label">목표 대비</div>
-            <div class="summary-value" id="total-rate">0%</div>
+            <div class="summary-label">기수별 계</div>
+            <div class="summary-value" id="grade-total">0명</div>
           </div>
           <div class="summary-box">
-            <div class="summary-label">예상 식사 인원</div>
-            <div class="summary-value" id="total-meal">0명</div>
+            <div class="summary-label">지구별 계</div>
+            <div class="summary-value" id="region-total">0명</div>
           </div>
         </div>
       </div>
@@ -290,9 +296,7 @@
               <thead>
                 <tr>
                   <th>지구명</th>
-                  <th>목표</th>
                   <th>신청(명)</th>
-                  <th>달성률</th>
                 </tr>
               </thead>
               <tbody id="region-tbody">
@@ -307,9 +311,7 @@
               <thead>
                 <tr>
                   <th>기수</th>
-                  <th>목표</th>
                   <th>신청(명)</th>
-                  <th>달성률</th>
                 </tr>
               </thead>
               <tbody id="grade-tbody">
@@ -324,7 +326,7 @@
   </div>
 
   <div class="bottom-bar">
-    <a href="https://docs.google.com/forms/d/e/1FAIpQLSd5bh2hdk7dTFFIwamIilL0oMP4k6IyH2mhkoBXNUykuuRoaw/viewform?usp=header" 
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSd5bh2hdk7dTFFIwamIilL0oMP4k6IyH2mhkoBXNUykuuRoaw/viewform" 
        target="_blank" 
        class="btn-apply-bottom">
       참석 신청하기 (구글 설문)
@@ -376,43 +378,42 @@
 
     // 데이터 렌더링 함수
     function renderTables() {
-      // 1. 지구별 렌더링
+      const regionTotal = regionData.reduce((sum, item) => sum + item.current, 0);
+      const gradeTotal = gradeData.reduce((sum, item) => sum + item.current, 0);
+
+      // 1. 지구별 현황 + 마지막 계
       const regionTbody = document.getElementById('region-tbody');
-      regionTbody.innerHTML = regionData.map(item => {
-        const rate = item.target > 0 ? Math.round((item.current / item.target) * 100) : 0;
-        return `
-          <tr>
-            <td class="highlight-name">${item.name}</td>
-            <td>${item.target}</td>
-            <td><strong>${item.current}</strong></td>
-            <td><span class="progress-pill">${rate}%</span></td>
-          </tr>
-        `;
-      }).join('');
+      regionTbody.innerHTML = regionData.map(item => `
+        <tr>
+          <td class="highlight-name">${item.name}</td>
+          <td><strong>${item.current}</strong></td>
+        </tr>
+      `).join('') + `
+        <tr class="total-row">
+          <td><strong>계</strong></td>
+          <td><strong>${regionTotal}</strong></td>
+        </tr>
+      `;
 
-      // 2. 기수별 렌더링
+      // 2. 기수별 현황 + 마지막 계
       const gradeTbody = document.getElementById('grade-tbody');
-      gradeTbody.innerHTML = gradeData.map(item => {
-        const rate = item.target > 0 ? Math.round((item.current / item.target) * 100) : 0;
-        return `
-          <tr>
-            <td class="highlight-name">${item.name}</td>
-            <td>${item.target}</td>
-            <td><strong>${item.current}</strong></td>
-            <td><span class="progress-pill">${rate}%</span></td>
-          </tr>
-        `;
-      }).join('');
+      gradeTbody.innerHTML = gradeData.map(item => `
+        <tr>
+          <td class="highlight-name">${item.name}</td>
+          <td><strong>${item.current}</strong></td>
+        </tr>
+      `).join('') + `
+        <tr class="total-row">
+          <td><strong>계</strong></td>
+          <td><strong>${gradeTotal}</strong></td>
+        </tr>
+      `;
 
-      // 3. 상단 종합 요약 계산
-      const totalTarget = regionData.reduce((acc, cur) => acc + cur.target, 0);
-      const totalCurrent = regionData.reduce((acc, cur) => acc + cur.current, 0);
-      const totalMeal = regionData.reduce((acc, cur) => acc + cur.meal, 0);
-      const totalRate = totalTarget > 0 ? Math.round((totalCurrent / totalTarget) * 100) : 0;
-
-      document.getElementById('total-count').innerText = totalCurrent + '명';
-      document.getElementById('total-rate').innerText = totalRate + '%';
-      document.getElementById('total-meal').innerText = totalMeal + '명';
+      // 3. 실시간 접수 현황 요약
+      // 동일한 신청 원장을 지구별/기수별로 각각 집계하므로 정상 연결 시 세 값은 같다.
+      document.getElementById('total-count').innerText = regionTotal + '명';
+      document.getElementById('grade-total').innerText = gradeTotal + '명';
+      document.getElementById('region-total').innerText = regionTotal + '명';
     }
 
     // 초기 실행
