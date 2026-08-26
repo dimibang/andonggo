@@ -336,7 +336,7 @@
   <script>
     // 1. 지회별 기본 데이터 (13개 지회)
     const regionData = [
-      { name: "안동지회", current: 0 },
+      { name: "안동지회", current: 1 },
       { name: "재경지회", current: 0 },
       { name: "부산지회", current: 0 },
       { name: "대구지회", current: 0 },
@@ -347,7 +347,7 @@
       { name: "창원지회", current: 0 },
       { name: "문경지회", current: 0 },
       { name: "경주지회", current: 0 },
-      { name: "안동시청 동문회", current: 0 },
+      { name: "안동시청동문회", current: 1 },
       { name: "기타", current: 0 }
     ];
 
@@ -361,6 +361,8 @@
         meal: 0
       });
     }
+    gradeData[5].current = 1;   // 6회
+    gradeData[26].current = 1;  // 27회
 
     // 탭 전환 함수
     function switchTab(type) {
