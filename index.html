@@ -61,29 +61,6 @@
       z-index: 10;
     }
 
-    /* 신청하기 버튼 (상단 메인 CTA) */
-    .btn-apply-main {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      background: linear-gradient(135deg, #e02b20 0%, #b91c1c 100%);
-      color: #ffffff;
-      font-size: 1.15rem;
-      font-weight: 700;
-      text-decoration: none;
-      padding: 16px 20px;
-      border-radius: 14px;
-      box-shadow: 0 8px 20px rgba(224, 43, 32, 0.4);
-      margin-bottom: 20px;
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
-    }
-    .btn-apply-main:active {
-      transform: scale(0.98);
-      box-shadow: 0 4px 10px rgba(224, 43, 32, 0.3);
-    }
-
     /* 카드 베이스 스타일 (Glassmorphism) */
     .card {
       background: var(--bg-glass);
@@ -118,6 +95,12 @@
       cursor: pointer;
     }
     .btn-refresh:active { background: #f1f5f9; }
+    .count-note {
+      font-size: 0.72rem;
+      color: var(--text-sub);
+      margin-top: 10px;
+      line-height: 1.4;
+    }
     .updated-at {
       font-size: 0.72rem;
       color: #94a3b8;
@@ -268,12 +251,6 @@
 
     <div class="content-wrap">
 
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLSd5bh2hdk7dTFFIwamIilL0oMP4k6IyH2mhkoBXNUykuuRoaw/viewform"
-         target="_blank"
-         class="btn-apply-main">
-        <span>📝</span> 개교 75주년 참석 신청하기
-      </a>
-
       <div class="card">
         <div class="card-title">
           <span>📊</span> 실시간 접수 현황 요약
@@ -281,18 +258,19 @@
         </div>
         <div class="summary-grid">
           <div class="summary-box">
-            <div class="summary-label">총 신청 인원</div>
+            <div class="summary-label">동문 신청</div>
+            <div class="summary-value" id="alumni-count">-</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">동반 가족</div>
+            <div class="summary-value" id="family-count">-</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">총 참석 예상</div>
             <div class="summary-value highlight" id="total-count">-</div>
           </div>
-          <div class="summary-box">
-            <div class="summary-label">기수별 계</div>
-            <div class="summary-value" id="grade-total">-</div>
-          </div>
-          <div class="summary-box">
-            <div class="summary-label">지회별 계</div>
-            <div class="summary-value" id="region-total">-</div>
-          </div>
         </div>
+        <div class="count-note">같은 분이 여러 번 신청하면 1명으로 셉니다 · 동반 '3명 이상'은 3명으로 계산</div>
         <div class="updated-at" id="updated-at">불러오는 중…</div>
       </div>
 
@@ -306,10 +284,10 @@
           <div class="table-container">
             <table>
               <thead>
-                <tr><th>지회명</th><th>신청(명)</th></tr>
+                <tr><th>지회명</th><th>동문</th><th>동반</th></tr>
               </thead>
               <tbody id="region-tbody">
-                <tr class="msg-row"><td colspan="2">불러오는 중…</td></tr>
+                <tr class="msg-row"><td colspan="3">불러오는 중…</td></tr>
               </tbody>
             </table>
           </div>
@@ -319,10 +297,10 @@
           <div class="table-container">
             <table>
               <thead>
-                <tr><th>기수</th><th>신청(명)</th></tr>
+                <tr><th>기수</th><th>동문</th><th>동반</th></tr>
               </thead>
               <tbody id="grade-tbody">
-                <tr class="msg-row"><td colspan="2">불러오는 중…</td></tr>
+                <tr class="msg-row"><td colspan="3">불러오는 중…</td></tr>
               </tbody>
             </table>
           </div>
@@ -343,17 +321,18 @@
 
   <script>
     /* ════════════════════════════════════════════════
-       구글 시트 '집계' 탭을 그대로 읽어옵니다.
-       A열 지회명 / B열 신청인원 · D열 기수 / E열 신청인원
+       구글 시트 '현황' 탭을 읽어옵니다. (중복 신청 제외 집계)
+       A 지회명 / B 동문 / C 동반
+       E 기수   / F 동문 / G 동반
+       I 구분   / J 인원  (동문 신청 · 동반 가족 · 총 참석 예상)
        ════════════════════════════════════════════════ */
-    const SHEET_ID    = "1fn7bFPkNrinGNX0iOstZ_ZupQMzHLy7tOJjdt-hg_Eo";
-    const SUMMARY_GID = "1646322462";   // '집계' 시트
-    const SHEET_URL   = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${SUMMARY_GID}`;
+    const SHEET_ID   = "1fn7bFPkNrinGNX0iOstZ_ZupQMzHLy7tOJjdt-hg_Eo";
+    const SHEET_NAME = "현황";
+    const SHEET_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
 
-    let regionData = [];
-    let gradeData  = [];
-    let regionSum  = null;   // 시트의 '지회계'
-    let gradeSum   = null;   // 시트의 '기수계'
+    let regionData = [], gradeData = [];
+    let regionSum = null, gradeSum = null;
+    let summary = {};
 
     const txt = c => (c && c.v != null) ? String(c.v).trim() : '';
     const num = c => {
@@ -366,7 +345,7 @@
 
     async function loadLiveData() {
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`
-                + `?gid=${SUMMARY_GID}&headers=0&tqx=out:json&_=${Date.now()}`;
+                + `?sheet=${encodeURIComponent(SHEET_NAME)}&range=A1:J80&headers=0&tqx=out:json&_=${Date.now()}`;
 
       const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) throw new Error(`시트 응답 오류 (${res.status})`);
@@ -376,31 +355,31 @@
       if (!match) throw new Error('시트 응답 형식을 읽을 수 없습니다');
 
       const data = JSON.parse(match[1]);
-      if (data.status === 'error') throw new Error('시트가 공개되어 있지 않습니다');
+      if (data.status === 'error') throw new Error('시트를 읽을 수 없습니다');
 
       const rows = (data.table && data.table.rows) || [];
-      const SKIP = ['지회명', '기수', '신청인원', '', 'A 지회명', 'D 기수'];
-
-      regionData = [];
-      gradeData  = [];
-      regionSum  = null;
-      gradeSum   = null;
+      regionData = []; gradeData = [];
+      regionSum = null; gradeSum = null;
+      summary = {};
 
       for (const row of rows) {
         const c = row.c || [];
 
         // 숫자 칸이 비어 있는 줄(머리글 등)은 건너뜁니다.
-        const rName = txt(c[0]), rVal = num(c[1]);
-        if (rName && rVal !== null && SKIP.indexOf(rName) === -1) {
-          if (rName === '지회계') regionSum = rVal;
-          else regionData.push({ name: rName, current: rVal });
+        const rName = txt(c[0]), rVal = num(c[1]), rFam = num(c[2]) || 0;
+        if (rName && rVal !== null) {
+          if (rName === '계') regionSum = { current: rVal, family: rFam };
+          else regionData.push({ name: rName, current: rVal, family: rFam });
         }
 
-        const gName = txt(c[3]), gVal = num(c[4]);
-        if (gName && gVal !== null && SKIP.indexOf(gName) === -1) {
-          if (gName === '기수계') gradeSum = gVal;
-          else gradeData.push({ name: gName, current: gVal });
+        const gName = txt(c[4]), gVal = num(c[5]), gFam = num(c[6]) || 0;
+        if (gName && gVal !== null) {
+          if (gName === '계') gradeSum = { current: gVal, family: gFam };
+          else gradeData.push({ name: gName, current: gVal, family: gFam });
         }
+
+        const sName = txt(c[8]), sVal = num(c[9]);
+        if (sName && sVal !== null) summary[sName] = sVal;
       }
 
       if (!regionData.length && !gradeData.length) throw new Error('집계 데이터가 비어 있습니다');
@@ -418,29 +397,40 @@
       }
     }
 
+    const sumOf = list => ({
+      current: list.reduce((s, i) => s + i.current, 0),
+      family:  list.reduce((s, i) => s + i.family, 0)
+    });
+
     function rowsHtml(list, total) {
       const body = list.map(item => `
         <tr class="${item.current > 0 ? 'has' : ''}">
           <td class="highlight-name">${esc(item.name)}</td>
           <td><strong class="${item.current > 0 ? '' : 'cnt-zero'}">${item.current}</strong></td>
+          <td><span class="${item.family > 0 ? '' : 'cnt-zero'}">${item.family}</span></td>
         </tr>`).join('');
       return body + `
         <tr class="total-row">
           <td><strong>계</strong></td>
-          <td><strong>${total}</strong></td>
+          <td><strong>${total.current}</strong></td>
+          <td><strong>${total.family}</strong></td>
         </tr>`;
     }
 
     function renderTables() {
-      const rTotal = regionSum != null ? regionSum : regionData.reduce((s, i) => s + i.current, 0);
-      const gTotal = gradeSum  != null ? gradeSum  : gradeData.reduce((s, i) => s + i.current, 0);
+      const rTotal = regionSum || sumOf(regionData);
+      const gTotal = gradeSum  || sumOf(gradeData);
 
       document.getElementById('region-tbody').innerHTML = rowsHtml(regionData, rTotal);
       document.getElementById('grade-tbody').innerHTML  = rowsHtml(gradeData,  gTotal);
 
-      document.getElementById('total-count').innerText  = rTotal + '명';
-      document.getElementById('grade-total').innerText  = gTotal + '명';
-      document.getElementById('region-total').innerText = rTotal + '명';
+      const alumni = summary['동문 신청'] != null ? summary['동문 신청'] : rTotal.current;
+      const family = summary['동반 가족'] != null ? summary['동반 가족'] : rTotal.family;
+      const total  = summary['총 참석 예상'] != null ? summary['총 참석 예상'] : alumni + family;
+
+      document.getElementById('alumni-count').innerText = alumni + '명';
+      document.getElementById('family-count').innerText = family + '명';
+      document.getElementById('total-count').innerText  = total + '명';
 
       const d = new Date();
       const p = n => (n < 10 ? '0' + n : n);
@@ -450,12 +440,12 @@
 
     function showError(err) {
       console.error(err);
-      ['total-count', 'grade-total', 'region-total'].forEach((id, i) => {
+      ['total-count', 'alumni-count', 'family-count'].forEach((id, i) => {
         document.getElementById(id).innerText = i === 0 ? '연결 오류' : '-';
       });
       document.getElementById('updated-at').innerHTML =
         `${esc(err.message || '불러오지 못했습니다')} · <a href="${SHEET_URL}" target="_blank">시트에서 확인 ›</a>`;
-      const msg = `<tr class="msg-row"><td colspan="2">현황을 불러오지 못했습니다.</td></tr>`;
+      const msg = `<tr class="msg-row"><td colspan="3">현황을 불러오지 못했습니다.</td></tr>`;
       document.getElementById('region-tbody').innerHTML = msg;
       document.getElementById('grade-tbody').innerHTML  = msg;
     }
