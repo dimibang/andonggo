@@ -95,6 +95,18 @@
       cursor: pointer;
     }
     .btn-refresh:active { background: #f1f5f9; }
+    .source-table {
+      margin-top: 12px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+    .source-table th { position: static; padding: 6px; font-size: 0.75rem; }
+    .source-table td { padding: 7px 6px; }
+    .source-table td:first-child { text-align: left; padding-left: 10px; }
+    .src-sub { font-size: 0.7rem; color: #94a3b8; }
     .count-note {
       font-size: 0.72rem;
       color: var(--text-sub);
@@ -253,12 +265,12 @@
 
       <div class="card">
         <div class="card-title">
-          <span>📊</span> 실시간 접수 현황 요약
+          <span>📊</span> 전체 참석 현황
           <button class="btn-refresh" type="button" onclick="refresh()">↻ 새로고침</button>
         </div>
         <div class="summary-grid">
           <div class="summary-box">
-            <div class="summary-label">동문 신청</div>
+            <div class="summary-label">동문</div>
             <div class="summary-value" id="alumni-count">-</div>
           </div>
           <div class="summary-box">
@@ -266,11 +278,18 @@
             <div class="summary-value" id="family-count">-</div>
           </div>
           <div class="summary-box">
-            <div class="summary-label">총 참석 예상</div>
+            <div class="summary-label">합계</div>
             <div class="summary-value highlight" id="total-count">-</div>
           </div>
         </div>
-        <div class="count-note">같은 분이 여러 번 신청하면 1명으로 셉니다 · 동반 '3명 이상'은 3명으로 계산</div>
+        <table class="source-table">
+          <thead><tr><th>구분</th><th>동문</th><th>동반</th></tr></thead>
+          <tbody>
+            <tr><td>온라인 신청 <span class="src-sub">실시간</span></td><td id="on-alumni">-</td><td id="on-family">-</td></tr>
+            <tr><td>지회·기수 명단 <span class="src-sub" id="list-stamp"></span></td><td id="list-alumni">-</td><td id="list-family">-</td></tr>
+          </tbody>
+        </table>
+        <div class="count-note">같은 분이 여러 번 신청하면 1명으로 셉니다 · 동반 '3명 이상'은 3명으로 계산 · 명단은 온라인 신청자를 뺀 인원입니다</div>
         <div class="updated-at" id="updated-at">불러오는 중…</div>
       </div>
 
@@ -321,18 +340,21 @@
 
   <script>
     /* ════════════════════════════════════════════════
-       구글 시트 '현황' 탭을 읽어옵니다. (중복 신청 제외 집계)
-       A 지회명 / B 동문 / C 동반
-       E 기수   / F 동문 / G 동반
-       I 구분   / J 인원  (동문 신청 · 동반 가족 · 총 참석 예상)
+       전체 참석 현황 = 온라인 신청 + 지회·기수 명단
+       · '현황' 탭   : 온라인 신청 (중복 신청 제외, 실시간)
+       · '명단집계' 탭: 엑셀 참석집계에서 온라인 신청자를 뺀 인원 (숫자만, 반영일 기준)
+       두 탭 모두 같은 틀입니다.
+         A 지회명 / B 동문 / C 동반
+         E 기수   / F 동문 / G 동반
+         I 구분   / J 값
+         L 반영 기준 (명단집계만)
        ════════════════════════════════════════════════ */
-    const SHEET_ID   = "1fn7bFPkNrinGNX0iOstZ_ZupQMzHLy7tOJjdt-hg_Eo";
-    const SHEET_NAME = "현황";
-    const SHEET_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
+    const SHEET_ID  = "1fn7bFPkNrinGNX0iOstZ_ZupQMzHLy7tOJjdt-hg_Eo";
+    const ONLINE    = "현황";
+    const LIST      = "명단집계";
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
 
-    let regionData = [], gradeData = [];
-    let regionSum = null, gradeSum = null;
-    let summary = {};
+    let online = null, list = null;
 
     const txt = c => (c && c.v != null) ? String(c.v).trim() : '';
     const num = c => {
@@ -343,9 +365,9 @@
     };
     const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    async function loadLiveData() {
+    async function loadSheet(name) {
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`
-                + `?sheet=${encodeURIComponent(SHEET_NAME)}&range=A1:J80&headers=0&tqx=out:json&_=${Date.now()}`;
+                + `?sheet=${encodeURIComponent(name)}&range=A1:L80&headers=0&tqx=out:json&_=${Date.now()}`;
 
       const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) throw new Error(`시트 응답 오류 (${res.status})`);
@@ -358,31 +380,31 @@
       if (data.status === 'error') throw new Error('시트를 읽을 수 없습니다');
 
       const rows = (data.table && data.table.rows) || [];
-      regionData = []; gradeData = [];
-      regionSum = null; gradeSum = null;
-      summary = {};
+      // 없는 탭 이름을 주면 구글이 첫 탭을 돌려주므로 머리글로 확인합니다.
+      const head = (rows[0] && rows[0].c) || [];
+      if (txt(head[0]) !== '지회명' || txt(head[4]) !== '기수') throw new Error(`'${name}' 탭을 찾을 수 없습니다`);
 
+      const out = { region: {}, grade: {}, regionOrder: [], gradeOrder: [], summary: {}, stamp: '' };
       for (const row of rows) {
         const c = row.c || [];
 
         // 숫자 칸이 비어 있는 줄(머리글 등)은 건너뜁니다.
-        const rName = txt(c[0]), rVal = num(c[1]), rFam = num(c[2]) || 0;
-        if (rName && rVal !== null) {
-          if (rName === '계') regionSum = { current: rVal, family: rFam };
-          else regionData.push({ name: rName, current: rVal, family: rFam });
+        const rName = txt(c[0]), rVal = num(c[1]);
+        if (rName && rVal !== null && rName !== '계') {
+          out.region[rName] = { current: rVal, family: num(c[2]) || 0 };
+          out.regionOrder.push(rName);
         }
-
-        const gName = txt(c[4]), gVal = num(c[5]), gFam = num(c[6]) || 0;
-        if (gName && gVal !== null) {
-          if (gName === '계') gradeSum = { current: gVal, family: gFam };
-          else gradeData.push({ name: gName, current: gVal, family: gFam });
+        const gName = txt(c[4]), gVal = num(c[5]);
+        if (gName && gVal !== null && gName !== '계') {
+          out.grade[gName] = { current: gVal, family: num(c[6]) || 0 };
+          out.gradeOrder.push(gName);
         }
-
         const sName = txt(c[8]), sVal = num(c[9]);
-        if (sName && sVal !== null) summary[sName] = sVal;
+        if (sName && sVal !== null) out.summary[sName] = sVal;
+        if (!out.stamp && txt(c[11]) && txt(c[11]) !== '반영 기준') out.stamp = txt(c[11]);
       }
-
-      if (!regionData.length && !gradeData.length) throw new Error('집계 데이터가 비어 있습니다');
+      if (!out.regionOrder.length) throw new Error('집계 데이터가 비어 있습니다');
+      return out;
     }
 
     function switchTab(type) {
@@ -397,13 +419,24 @@
       }
     }
 
-    const sumOf = list => ({
-      current: list.reduce((s, i) => s + i.current, 0),
-      family:  list.reduce((s, i) => s + i.family, 0)
+    // 온라인 + 명단을 같은 이름끼리 더합니다. 순서는 온라인(현황) 탭을 따릅니다.
+    function merge(key, orderKey) {
+      const a = online[key], b = list ? list[key] : {};
+      const names = online[orderKey].slice();
+      if (list) list[orderKey].forEach(n => { if (names.indexOf(n) === -1) names.push(n); });
+      return names.map(n => {
+        const x = a[n] || { current: 0, family: 0 }, y = b[n] || { current: 0, family: 0 };
+        return { name: n, current: x.current + y.current, family: x.family + y.family };
+      });
+    }
+
+    const sumOf = rows => ({
+      current: rows.reduce((s, i) => s + i.current, 0),
+      family:  rows.reduce((s, i) => s + i.family, 0)
     });
 
-    function rowsHtml(list, total) {
-      const body = list.map(item => `
+    function rowsHtml(rows, total) {
+      const body = rows.map(item => `
         <tr class="${item.current > 0 ? 'has' : ''}">
           <td class="highlight-name">${esc(item.name)}</td>
           <td><strong class="${item.current > 0 ? '' : 'cnt-zero'}">${item.current}</strong></td>
@@ -417,32 +450,44 @@
         </tr>`;
     }
 
-    function renderTables() {
-      const rTotal = regionSum || sumOf(regionData);
-      const gTotal = gradeSum  || sumOf(gradeData);
+    const setText = (id, v) => { document.getElementById(id).innerText = v; };
 
-      document.getElementById('region-tbody').innerHTML = rowsHtml(regionData, rTotal);
-      document.getElementById('grade-tbody').innerHTML  = rowsHtml(gradeData,  gTotal);
+    function render() {
+      const regions = merge('region', 'regionOrder');
+      const grades  = merge('grade', 'gradeOrder');
+      const total   = sumOf(regions);
 
-      const alumni = summary['동문 신청'] != null ? summary['동문 신청'] : rTotal.current;
-      const family = summary['동반 가족'] != null ? summary['동반 가족'] : rTotal.family;
-      const total  = summary['총 참석 예상'] != null ? summary['총 참석 예상'] : alumni + family;
+      document.getElementById('region-tbody').innerHTML = rowsHtml(regions, total);
+      document.getElementById('grade-tbody').innerHTML  = rowsHtml(grades, sumOf(grades));
 
-      document.getElementById('alumni-count').innerText = alumni + '명';
-      document.getElementById('family-count').innerText = family + '명';
-      document.getElementById('total-count').innerText  = total + '명';
+      setText('alumni-count', total.current + '명');
+      setText('family-count', total.family + '명');
+      setText('total-count',  (total.current + total.family) + '명');
+
+      const on = sumOf(online.regionOrder.map(n => online.region[n]));
+      setText('on-alumni', on.current);
+      setText('on-family', on.family);
+      if (list) {
+        const li = sumOf(list.regionOrder.map(n => list.region[n]));
+        setText('list-alumni', li.current);
+        setText('list-family', li.family);
+        setText('list-stamp', list.stamp ? `${list.stamp} 반영` : '');
+      } else {
+        setText('list-alumni', '-');
+        setText('list-family', '-');
+        setText('list-stamp', '불러오지 못함');
+      }
 
       const d = new Date();
       const p = n => (n < 10 ? '0' + n : n);
-      document.getElementById('updated-at').innerText =
-        `업데이트 ${d.getMonth() + 1}. ${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())} 기준`;
+      setText('updated-at', `업데이트 ${d.getMonth() + 1}. ${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())} 기준`);
     }
 
     function showError(err) {
       console.error(err);
-      ['total-count', 'alumni-count', 'family-count'].forEach((id, i) => {
-        document.getElementById(id).innerText = i === 0 ? '연결 오류' : '-';
-      });
+      setText('total-count', '연결 오류');
+      setText('alumni-count', '-');
+      setText('family-count', '-');
       document.getElementById('updated-at').innerHTML =
         `${esc(err.message || '불러오지 못했습니다')} · <a href="${SHEET_URL}" target="_blank">시트에서 확인 ›</a>`;
       const msg = `<tr class="msg-row"><td colspan="3">현황을 불러오지 못했습니다.</td></tr>`;
@@ -451,9 +496,13 @@
     }
 
     async function refresh() {
-      document.getElementById('updated-at').innerText = '불러오는 중…';
-      try { await loadLiveData(); renderTables(); }
-      catch (e) { showError(e); }
+      setText('updated-at', '불러오는 중…');
+      const [a, b] = await Promise.allSettled([loadSheet(ONLINE), loadSheet(LIST)]);
+      if (a.status !== 'fulfilled') { showError(a.reason); return; }
+      online = a.value;
+      list = b.status === 'fulfilled' ? b.value : null;   // 명단을 못 읽어도 온라인은 보여줍니다
+      if (!list) console.error(b.reason);
+      render();
     }
 
     document.addEventListener('DOMContentLoaded', refresh);
