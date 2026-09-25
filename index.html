@@ -111,6 +111,19 @@
     .top-table thead th:first-child { text-align: left; padding-left: 10px; color: var(--primary-color); }
     .rank { color: #94a3b8; font-weight: 700; margin-right: 4px; }
     .prize { font-size: 0.85rem; font-weight: 700; color: var(--accent-color); }
+    /* 어제보다 늘어난 기수 */
+    .grow-box {
+      margin-top: 10px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .grow-title { font-size: 0.85rem; font-weight: 700; color: #c2410c; margin-bottom: 6px; }
+    .grow-list { list-style: none; font-size: 0.95rem; }
+    .grow-list li { padding: 3px 0; color: var(--text-main); }
+    .grow-list b { color: var(--primary-color); }
+    .grow-up { color: var(--accent-color); font-weight: 700; }
     .count-note {
       font-size: 0.72rem;
       color: var(--text-sub);
@@ -299,6 +312,10 @@
             <tr class="msg-row"><td colspan="3">불러오는 중…</td></tr>
           </tbody>
         </table>
+        <div class="grow-box" id="grow-box" hidden>
+          <div class="grow-title">📈 어제보다 5명 이상 늘어난 기수</div>
+          <ul class="grow-list" id="grow-list"></ul>
+        </div>
         <div class="updated-at" id="updated-at">불러오는 중…</div>
       </div>
 
@@ -363,7 +380,14 @@
     const LIST      = "명단집계";
     const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
 
-    let online = null, list = null;
+    let online = null, list = null, base = null;
+
+    // 어제 기준값: 마지막으로 올린 집계의 기수별 동문 수 (snapshot.json)
+    async function loadBase() {
+      const res = await fetch(`./snapshot.json?_=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('기준값 없음');
+      return (await res.json())['기수'];
+    }
 
     const txt = c => (c && c.v != null) ? String(c.v).trim() : '';
     const num = c => {
@@ -480,6 +504,16 @@
           <td><span class="${g.family > 0 ? '' : 'cnt-zero'}">${g.family}</span></td>
         </tr>`).join('') || `<tr class="msg-row"><td colspan="3">집계 없음</td></tr>`;
 
+      // 어제보다 5명 이상 늘어난 기수 (기준: snapshot.json — 마지막으로 올린 집계)
+      const box = document.getElementById('grow-box');
+      const grown = !base ? [] : grades
+        .map(g => ({ name: g.name, before: base[g.name] || 0, now: g.current }))
+        .filter(g => g.now - g.before >= 5)
+        .sort((a, b) => (b.now - b.before) - (a.now - a.before) || parseInt(a.name) - parseInt(b.name));
+      box.hidden = grown.length === 0;
+      document.getElementById('grow-list').innerHTML = grown.map(g => `
+        <li><b>${esc(g.name)}</b> ${g.before}명 → ${g.now}명 <span class="grow-up">▲${g.now - g.before}</span></li>`).join('');
+
       setText('alumni-count', total.current + '명');
       setText('family-count', total.family + '명');
       setText('total-count',  (total.current + total.family) + '명');
@@ -517,11 +551,12 @@
 
     async function refresh() {
       setText('updated-at', '불러오는 중…');
-      const [a, b] = await Promise.allSettled([loadSheet(ONLINE), loadSheet(LIST)]);
+      const [a, b, c] = await Promise.allSettled([loadSheet(ONLINE), loadSheet(LIST), loadBase()]);
       if (a.status !== 'fulfilled') { showError(a.reason); return; }
       online = a.value;
       list = b.status === 'fulfilled' ? b.value : null;   // 명단을 못 읽어도 온라인은 보여줍니다
       if (!list) console.error(b.reason);
+      base = c.status === 'fulfilled' ? c.value : null;   // 기준값을 못 읽으면 증가 표시만 빠집니다
       render();
     }
 
