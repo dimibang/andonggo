@@ -107,6 +107,9 @@
     .source-table td { padding: 10px 6px; font-weight: 600; }
     .source-table td:first-child { text-align: left; padding-left: 10px; }
     .src-sub { font-size: 0.8rem; font-weight: 400; color: #64748b; }
+    .top-table { margin-top: 10px; }
+    .top-table thead th:first-child { text-align: left; padding-left: 10px; color: var(--primary-color); }
+    .rank { color: #94a3b8; font-weight: 700; margin-right: 4px; }
     .count-note {
       font-size: 0.72rem;
       color: var(--text-sub);
@@ -289,6 +292,12 @@
             <tr><td>오프라인 집계 <span class="src-sub" id="list-stamp"></span></td><td id="list-alumni">-</td><td id="list-family">-</td></tr>
           </tbody>
         </table>
+        <table class="source-table top-table">
+          <thead><tr><th>🏆 기수별 상위 5</th><th>동문</th><th>동반</th></tr></thead>
+          <tbody id="top-tbody">
+            <tr class="msg-row"><td colspan="3">불러오는 중…</td></tr>
+          </tbody>
+        </table>
         <div class="updated-at" id="updated-at">불러오는 중…</div>
       </div>
 
@@ -458,6 +467,17 @@
 
       document.getElementById('region-tbody').innerHTML = rowsHtml(regions, total);
       document.getElementById('grade-tbody').innerHTML  = rowsHtml(grades, sumOf(grades));
+
+      // 기수별 상위 5 — 동문 수 순, 같으면 동반 많은 쪽 → 빠른 기수
+      const top = grades.filter(g => g.current > 0)
+        .sort((a, b) => b.current - a.current || b.family - a.family || parseInt(a.name) - parseInt(b.name))
+        .slice(0, 5);
+      document.getElementById('top-tbody').innerHTML = top.map((g, i) => `
+        <tr>
+          <td><span class="rank">${i + 1}위</span> <span class="highlight-name">${esc(g.name)}</span></td>
+          <td><strong>${g.current}</strong></td>
+          <td><span class="${g.family > 0 ? '' : 'cnt-zero'}">${g.family}</span></td>
+        </tr>`).join('') || `<tr class="msg-row"><td colspan="3">집계 없음</td></tr>`;
 
       setText('alumni-count', total.current + '명');
       setText('family-count', total.family + '명');
