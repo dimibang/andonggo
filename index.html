@@ -508,7 +508,7 @@
         .slice(0, 5);
       document.getElementById('top-tbody').innerHTML = top.map((g, i) => `
         <tr>
-          <td><span class="rank">${i + 1}위</span> <span class="highlight-name">${esc(g.name)}</span></td>
+          <td><span class="rank">${i + 1}위</span> <span class="highlight-name">${label(g.name)}</span></td>
           <td><strong>${g.current}</strong></td>
           <td><span class="${g.family > 0 ? '' : 'cnt-zero'}">${g.family}</span></td>
         </tr>`).join('') || `<tr class="msg-row"><td colspan="3">집계 없음</td></tr>`;
