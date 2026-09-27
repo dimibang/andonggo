@@ -110,6 +110,7 @@
     .top-table { margin-top: 10px; }
     .top-table thead th:first-child { text-align: left; padding-left: 10px; color: var(--primary-color); }
     .rank { color: #94a3b8; font-weight: 700; margin-right: 4px; }
+    .gisu-sub { font-size: 0.75rem; font-weight: 400; color: #64748b; white-space: nowrap; }
     .prize { font-size: 0.85rem; font-weight: 700; color: var(--accent-color); }
     /* 어제보다 늘어난 기수 */
     .grow-box {
@@ -468,10 +469,18 @@
       family:  rows.reduce((s, i) => s + i.family, 0)
     });
 
-    function rowsHtml(rows, total) {
+    // 기수 이름에 졸업년도와 2026년 나이를 붙입니다 (27회 → 27회(1978졸업, 67세))
+    function label(name) {
+      const m = /^(\d+)회$/.exec(name);
+      if (!m) return esc(name);
+      const n = +m[1];
+      return `${esc(name)} <span class="gisu-sub">(${1951 + n}졸업, ${94 - n}세)</span>`;
+    }
+
+    function rowsHtml(rows, total, withInfo) {
       const body = rows.map(item => `
         <tr class="${item.current > 0 ? 'has' : ''}">
-          <td class="highlight-name">${esc(item.name)}</td>
+          <td class="highlight-name">${withInfo ? label(item.name) : esc(item.name)}</td>
           <td><strong class="${item.current > 0 ? '' : 'cnt-zero'}">${item.current}</strong></td>
           <td><span class="${item.family > 0 ? '' : 'cnt-zero'}">${item.family}</span></td>
         </tr>`).join('');
@@ -491,7 +500,7 @@
       const total   = sumOf(regions);
 
       document.getElementById('region-tbody').innerHTML = rowsHtml(regions, total);
-      document.getElementById('grade-tbody').innerHTML  = rowsHtml(grades, sumOf(grades));
+      document.getElementById('grade-tbody').innerHTML  = rowsHtml(grades, sumOf(grades), true);
 
       // 기수별 상위 5 — 동문 수 순, 같으면 동반 많은 쪽 → 빠른 기수
       const top = grades.filter(g => g.current > 0)
