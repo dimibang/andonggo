@@ -196,8 +196,8 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .table-container {
-      max-height: 400px;
-      overflow-y: auto;
+      /* 표를 다 펼칩니다 — 칸 안쪽 스크롤바 없이 화면 전체로 내려 봅니다 */
+      overflow: visible;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       background: #ffffff;
@@ -210,7 +210,7 @@
     }
     thead th {
       position: sticky;
-      top: 0;
+      top: 0;      /* 화면을 내려도 머리글이 붙어 있습니다 */
       background: #f8fafc;
       color: var(--text-sub);
       font-weight: 600;
