@@ -171,10 +171,10 @@
       display: none;
       width: 100%;
       margin: 0 0 12px;
-      border: 1px solid #fed7aa;
-      background: #fff7ed;
-      color: #c2410c;
-      font-size: 0.95rem;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      color: var(--text-sub);
+      font-size: 0.88rem;
       font-weight: 700;
       padding: 11px 14px;
       border-radius: 10px;
@@ -182,9 +182,10 @@
       text-align: left;
     }
     .btn-message.show { display: flex; align-items: center; gap: 6px; }
-    .btn-message .date { font-size: 0.8rem; font-weight: 600; color: #9a3412; opacity: 0.8; }
-    .btn-message .arrow { margin-left: auto; font-size: 1.1rem; }
-    .btn-message:active { background: #ffedd5; }
+    .btn-message .label { flex: 1; min-width: 0; word-break: keep-all; line-height: 1.4; }
+    .btn-message .date { font-size: 0.78rem; font-weight: 600; color: #6b7280; white-space: nowrap; }
+    .btn-message .arrow { font-size: 1.1rem; color: #9ca3af; }
+    .btn-message:active { background: #f8fafc; }
     /* 스크롤은 되되 막대는 숨긴다 */
     .sched-body { scrollbar-width: none; -ms-overflow-style: none; }
     .sched-body::-webkit-scrollbar { display: none; }
@@ -396,7 +397,7 @@
           </div>
         </div>
         <button class="btn-message" id="btnMessage" type="button" onclick="openMessage()">
-          💌 김명돌 회장 메시지 <span class="date" id="msgDate"></span><span class="arrow">›</span>
+          <span class="label">💌 김명돌 제18대 안동고등학교 총동창회장 메시지</span> <span class="date" id="msgDate"></span><span class="arrow">›</span>
         </button>
         <table class="source-table">
           <thead><tr><th>구분</th><th>동문</th><th>동반</th></tr></thead>
