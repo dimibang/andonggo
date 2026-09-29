@@ -206,6 +206,12 @@
     .source-table td:first-child { text-align: left; padding-left: 10px; }
     .src-sub { font-size: 0.8rem; font-weight: 400; color: #64748b; }
     .top-table { margin-top: 10px; }
+    .top-table .top-sum { font-weight: 800; color: var(--primary-color); }
+    /* 좁은 휴대폰(380px 이하)에서 합계 칸이 늘어도 한 줄에 들어가게 */
+    @media (max-width: 380px) {
+      .top-table td, .top-table th { padding-left: 4px; padding-right: 4px; }
+      .top-table .gisu-sub { font-size: 0.68rem; letter-spacing: -0.02em; }
+    }
     .top-table thead th:first-child { text-align: left; padding-left: 10px; color: var(--primary-color); }
     .rank { color: #94a3b8; font-weight: 700; margin-right: 4px; }
     .gisu-sub { font-size: 0.75rem; font-weight: 400; color: #64748b; white-space: nowrap; }
@@ -410,7 +416,7 @@
           </tbody>
         </table>
         <table class="source-table top-table">
-          <thead><tr><th>🏆 기수별 상위 5 <span class="prize">(각 금1돈)</span></th><th>동문</th><th>동반</th></tr></thead>
+          <thead><tr><th>🏆 기수별 상위 5 <span class="prize">(각 금1돈)</span></th><th>동문</th><th>동반</th><th>합계</th></tr></thead>
           <tbody id="top-tbody">
             <tr class="msg-row"><td colspan="3">불러오는 중…</td></tr>
           </tbody>
@@ -692,7 +698,8 @@
           <td><span class="rank">${i + 1}위</span> <span class="highlight-name">${label(g.name)}</span></td>
           <td><strong>${g.current}</strong></td>
           <td><span class="${g.family > 0 ? '' : 'cnt-zero'}">${g.family}</span></td>
-        </tr>`).join('') || `<tr class="msg-row"><td colspan="3">집계 없음</td></tr>`;
+          <td class="top-sum">${g.current + g.family}</td>
+        </tr>`).join('') || `<tr class="msg-row"><td colspan="4">집계 없음</td></tr>`;
 
       // 어제보다 5명 이상 늘어난 기수 (기준: snapshot.json — 마지막으로 올린 집계)
       const box = document.getElementById('grow-box');
