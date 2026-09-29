@@ -166,6 +166,25 @@
       line-height: 1.65;
       color: var(--text-main);
     }
+    /* 김명돌 회장 메시지 버튼 — 현황 숫자 칸 바로 아래 한 줄 */
+    .btn-message {
+      display: none;
+      width: 100%;
+      margin: 0 0 12px;
+      border: 1px solid #fed7aa;
+      background: #fff7ed;
+      color: #c2410c;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 11px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .btn-message.show { display: flex; align-items: center; gap: 6px; }
+    .btn-message .date { font-size: 0.8rem; font-weight: 600; color: #9a3412; opacity: 0.8; }
+    .btn-message .arrow { margin-left: auto; font-size: 1.1rem; }
+    .btn-message:active { background: #ffedd5; }
     /* 스크롤은 되되 막대는 숨긴다 */
     .sched-body { scrollbar-width: none; -ms-overflow-style: none; }
     .sched-body::-webkit-scrollbar { display: none; }
@@ -376,6 +395,9 @@
             <div class="summary-value highlight" id="total-count">-</div>
           </div>
         </div>
+        <button class="btn-message" id="btnMessage" type="button" onclick="openMessage()">
+          💌 김명돌 회장 메시지 <span class="date" id="msgDate"></span><span class="arrow">›</span>
+        </button>
         <table class="source-table">
           <thead><tr><th>구분</th><th>동문</th><th>동반</th></tr></thead>
           <tbody>
@@ -453,25 +475,57 @@
 
   <script>
     // 일정안내 — 내용은 저장소의 일정안내.txt 를 그대로 읽는다(글만 바꾸면 페이지는 손대지 않아도 된다)
-    let schedLoaded = false;
-    async function openSchedule() {
+    // 일정안내·회장 메시지가 같은 창을 쓴다. 글은 저장소의 .txt 를 그대로 읽는다.
+    const textCache = {};
+    async function openTextModal(title, file) {
+      document.getElementById('schedTitle').textContent = title;
       document.getElementById('schedOverlay').classList.add('open');
       document.body.style.overflow = 'hidden';
-      if (schedLoaded) return;
       const box = document.getElementById('schedBody');
+      box.scrollTop = 0;
+      if (textCache[file]) { box.innerHTML = textCache[file]; return; }
+      box.textContent = '불러오는 중…';
       try {
-        const res = await fetch('./' + encodeURIComponent('일정안내.txt') + '?t=' + Date.now(), { cache: 'no-store' });
+        const res = await fetch('./' + encodeURIComponent(file) + '?t=' + Date.now(), { cache: 'no-store' });
         if (!res.ok) throw new Error(res.status);
         const text = new TextDecoder('utf-8').decode(await res.arrayBuffer());
         const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        box.innerHTML = esc(text.trim()).split(/\r?\n/)
+        textCache[file] = esc(text.trim()).split(/\r?\n/)
           .map(l => /^\s*■/.test(l) ? '<span class="sec">' + l.trim() + '</span>' : l)
           .join('\n');
-        schedLoaded = true;
+        box.innerHTML = textCache[file];
       } catch (e) {
-        box.textContent = '일정을 불러오지 못했습니다. 잠시 후 다시 눌러 주세요.';
+        box.textContent = '글을 불러오지 못했습니다. 잠시 후 다시 눌러 주세요.';
       }
     }
+    function openSchedule() { openTextModal('📅 공식 일정 안내', '일정안내.txt'); }
+
+    // 김명돌 회장 메시지 — 오늘부터 14일 전까지 거슬러 올라가며 가장 최근 '김명돌회장 메시지 YYYY-MM-DD.txt' 를 찾는다.
+    // 매일 글 파일만 올리면 되고 이 페이지는 손대지 않는다. 하나도 없으면 버튼을 숨긴 채 둔다.
+    let msgFile = null, msgLabel = '';
+    async function findLatestMessage() {
+      const pad = n => String(n).padStart(2, '0');
+      const d = new Date();
+      for (let i = 0; i < 15; i++) {
+        const ymd = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+        const file = '김명돌회장 메시지 ' + ymd + '.txt';
+        try {
+          const res = await fetch('./' + encodeURIComponent(file) + '?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+          if (res.ok) {
+            msgFile = file;
+            msgLabel = (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+            document.getElementById('msgDate').textContent = msgLabel;
+            document.getElementById('btnMessage').classList.add('show');
+            return;
+          }
+        } catch (e) { /* 다음 날짜로 */ }
+        d.setDate(d.getDate() - 1);
+      }
+    }
+    function openMessage() {
+      if (msgFile) openTextModal('💌 김명돌 회장 메시지 · ' + msgLabel, msgFile);
+    }
+    findLatestMessage();
     function closeSchedule() {
       document.getElementById('schedOverlay').classList.remove('open');
       document.body.style.overflow = '';
