@@ -40,18 +40,18 @@
       width: 100%;
       max-width: 480px;
       min-height: 100vh;
-      background: url('./KakaoTalk_20260819_161509609.jpg') no-repeat top center;
-      background-size: contain;
+      background: url('./car-casper.jpg') no-repeat top center;
+      background-size: 100% auto;
       background-color: #f1f5f9;
       position: relative;
       padding-bottom: 90px;
       box-shadow: 0 0 25px rgba(0,0,0,0.3);
     }
 
-    /* 포스터 상단 영역 확보용 스페이서 — 화면 폭에 비례 (폭 375px일 때 380px) */
+    /* 포스터 전체 높이만큼 스페이서 — 포스터(1024×1536) 비율 그대로, 현황 카드는 포스터 아래에서 시작 */
     .poster-hero {
       width: 100%;
-      aspect-ratio: 375 / 380;
+      aspect-ratio: 1024 / 1536;
     }
 
     /* 메인 컨텐츠 영역 */
