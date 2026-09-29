@@ -683,9 +683,9 @@
       document.getElementById('region-tbody').innerHTML = rowsHtml(regions, total);
       document.getElementById('grade-tbody').innerHTML  = rowsHtml(grades, sumOf(grades), true);
 
-      // 기수별 상위 5 — 동문 수 순, 같으면 동반 많은 쪽 → 빠른 기수
+      // 기수별 상위 5 — 포스터 기준: 동문+동반 합계 순, 같으면 동문 많은 쪽 → 빠른 기수
       const top = grades.filter(g => g.current > 0)
-        .sort((a, b) => b.current - a.current || b.family - a.family || parseInt(a.name) - parseInt(b.name))
+        .sort((a, b) => (b.current + b.family) - (a.current + a.family) || b.current - a.current || parseInt(a.name) - parseInt(b.name))
         .slice(0, 5);
       document.getElementById('top-tbody').innerHTML = top.map((g, i) => `
         <tr>
