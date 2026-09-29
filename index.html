@@ -166,6 +166,9 @@
       line-height: 1.65;
       color: var(--text-main);
     }
+    /* 스크롤은 되되 막대는 숨긴다 */
+    .sched-body { scrollbar-width: none; -ms-overflow-style: none; }
+    .sched-body::-webkit-scrollbar { display: none; }
     .sched-body .sec { display: inline-block; margin-top: 4px; font-weight: 800; color: var(--primary-color); }
     .source-table {
       margin-top: 12px;
