@@ -189,6 +189,14 @@
     /* 창 제목이 길면 낱말 단위로 줄바꿈, 닫기 버튼은 한 줄 유지 */
     #schedTitle { flex: 1; min-width: 0; word-break: keep-all; line-height: 1.4; padding-right: 8px; }
     .sched-close { white-space: nowrap; flex-shrink: 0; }
+    /* 회장 메시지 창의 날짜 단추 — 지난 메시지도 골라 본다 */
+    .msg-dates { display: none; gap: 6px; flex-wrap: wrap; padding: 10px 16px 0; }
+    .msg-dates.show { display: flex; }
+    .msg-dates button {
+      border: 1px solid var(--border-color); background: #ffffff; color: var(--text-sub);
+      font-size: 0.8rem; font-weight: 600; padding: 5px 10px; border-radius: 999px; cursor: pointer;
+    }
+    .msg-dates button.on { background: var(--primary-color); border-color: var(--primary-color); color: #ffffff; }
     /* 스크롤은 되되 막대는 숨긴다 */
     .sched-body { scrollbar-width: none; -ms-overflow-style: none; }
     .sched-body::-webkit-scrollbar { display: none; }
@@ -479,6 +487,7 @@
         <span id="schedTitle">📅 공식 일정 안내</span>
         <button class="sched-close" type="button" onclick="closeSchedule()">✕ 닫기</button>
       </div>
+      <div class="msg-dates" id="msgDates"></div>
       <div class="sched-body" id="schedBody">불러오는 중…</div>
     </div>
   </div>
@@ -508,34 +517,42 @@
         box.textContent = '글을 불러오지 못했습니다. 잠시 후 다시 눌러 주세요.';
       }
     }
-    function openSchedule() { openTextModal('📅 공식 일정 안내', '일정안내.txt'); }
+    function openSchedule() {
+      document.getElementById('msgDates').classList.remove('show');
+      openTextModal('📅 공식 일정 안내', '일정안내.txt');
+    }
 
     // 김명돌 회장 메시지 — 오늘부터 14일 전까지 거슬러 올라가며 가장 최근 '김명돌회장 메시지 YYYY-MM-DD.txt' 를 찾는다.
     // 매일 글 파일만 올리면 되고 이 페이지는 손대지 않는다. 하나도 없으면 버튼을 숨긴 채 둔다.
-    let msgFile = null, msgLabel = '';
-    async function findLatestMessage() {
+    // 김명돌 회장 메시지 — 오늘부터 30일 전까지 '김명돌회장 메시지 YYYY-MM-DD.txt' 를 모두 찾는다(최근 것이 앞).
+    // 버튼은 가장 최근 메시지를 열고, 창 위 날짜 단추로 지난 메시지도 볼 수 있다. 매일 글 파일만 올리면 된다.
+    let msgs = [];
+    async function findMessages() {
       const pad = n => String(n).padStart(2, '0');
-      const d = new Date();
-      for (let i = 0; i < 15; i++) {
-        const ymd = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
-        const file = '김명돌회장 메시지 ' + ymd + '.txt';
+      const days = [];
+      for (let i = 0; i < 31; i++) { const d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
+      const found = await Promise.all(days.map(async d => {
+        const file = '김명돌회장 메시지 ' + d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '.txt';
         try {
           const res = await fetch('./' + encodeURIComponent(file) + '?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
-          if (res.ok) {
-            msgFile = file;
-            msgLabel = (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
-            document.getElementById('msgDate').textContent = msgLabel;
-            document.getElementById('btnMessage').classList.add('show');
-            return;
-          }
-        } catch (e) { /* 다음 날짜로 */ }
-        d.setDate(d.getDate() - 1);
-      }
+          return res.ok ? { file: file, label: (d.getMonth() + 1) + '월 ' + d.getDate() + '일' } : null;
+        } catch (e) { return null; }
+      }));
+      msgs = found.filter(Boolean);
+      if (!msgs.length) return;
+      document.getElementById('msgDate').textContent = msgs[0].label;
+      document.getElementById('btnMessage').classList.add('show');
     }
-    function openMessage() {
-      if (msgFile) openTextModal('💌 김명돌 제18대 안동고등학교 총동창회장 메시지 · ' + msgLabel, msgFile);
+    function openMessage(i) {
+      i = i || 0;
+      if (!msgs[i]) return;
+      const bar = document.getElementById('msgDates');
+      bar.innerHTML = msgs.map((m, k) =>
+        '<button type="button" class="' + (k === i ? 'on' : '') + '" onclick="openMessage(' + k + ')">' + m.label + '</button>').join('');
+      bar.classList.toggle('show', msgs.length > 1);
+      openTextModal('💌 김명돌 제18대 안동고등학교 총동창회장 메시지 · ' + msgs[i].label, msgs[i].file);
     }
-    findLatestMessage();
+    findMessages();
     function closeSchedule() {
       document.getElementById('schedOverlay').classList.remove('open');
       document.body.style.overflow = '';
