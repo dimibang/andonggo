@@ -189,6 +189,15 @@
     /* 창 제목이 길면 낱말 단위로 줄바꿈, 닫기 버튼은 한 줄 유지 */
     #schedTitle { flex: 1; min-width: 0; word-break: keep-all; line-height: 1.4; padding-right: 8px; }
     .sched-close { white-space: nowrap; flex-shrink: 0; }
+    /* 후원금 총액 — 회장 메시지에서 뽑아 메시지 버튼 위에 한 줄로 */
+    .donation-line {
+      display: none; align-items: baseline; justify-content: space-between; gap: 8px;
+      margin: 0 0 8px; padding: 10px 14px; border-radius: 10px;
+      background: #f0f7ff; border: 1px solid #cfe0f5; color: var(--text-sub); font-size: 0.86rem;
+    }
+    .donation-line.show { display: flex; }
+    .donation-line #donationLabel { word-break: keep-all; }
+    .donation-line .amount { color: var(--primary-color); font-weight: 800; font-size: 1.05rem; white-space: nowrap; }
     /* 회장 메시지 창의 날짜 단추 — 지난 메시지도 골라 본다 */
     .msg-dates { display: none; gap: 6px; flex-wrap: wrap; padding: 10px 16px 0; }
     .msg-dates.show { display: flex; }
@@ -219,6 +228,8 @@
     @media (max-width: 380px) {
       .top-table td, .top-table th { padding-left: 4px; padding-right: 4px; }
       .top-table .gisu-sub { font-size: 0.68rem; letter-spacing: -0.02em; }
+      .top-table thead th { white-space: nowrap; font-size: 0.8rem; }
+      .top-table thead th:first-child { white-space: normal; }
     }
     .top-table thead th:first-child { text-align: left; padding-left: 10px; color: var(--primary-color); }
     .rank { color: #94a3b8; font-weight: 700; margin-right: 4px; }
@@ -413,6 +424,9 @@
             <div class="summary-value highlight" id="total-count">-</div>
           </div>
         </div>
+        <div class="donation-line" id="donationLine">
+          <span id="donationLabel">후원금 총액(약정 포함)</span><span class="amount" id="donationAmount"></span>
+        </div>
         <button class="btn-message" id="btnMessage" type="button" onclick="openMessage()">
           <span class="label">💌 김명돌 제18대 안동고등학교 총동창회장 메시지</span> <span class="date" id="msgDate"></span><span class="arrow">›</span>
         </button>
@@ -542,6 +556,24 @@
       if (!msgs.length) return;
       document.getElementById('msgDate').textContent = msgs[0].label;
       document.getElementById('btnMessage').classList.add('show');
+      showDonation();
+    }
+    // 예: '9월 30일 어제까지 후원금 총액(약정액 포함)은 788,320,000원 입니다'
+    async function showDonation() {
+      const re = /(\d{1,2}월\s*\d{1,2}일)[^\n]{0,20}?후원금\s*총액\s*\(약정[^)]*\)\s*[은는]?\s*([\d,]+)\s*원/;
+      for (const m of msgs) {
+        try {
+          const res = await fetch('./' + encodeURIComponent(m.file) + '?t=' + Date.now(), { cache: 'no-store' });
+          if (!res.ok) continue;
+          const text = new TextDecoder('utf-8').decode(await res.arrayBuffer());
+          const hit = re.exec(text);
+          if (!hit) continue;
+          document.getElementById('donationLabel').textContent = hit[1].replace(/\s+/g, ' ') + ' 후원금 총액(약정 포함)';
+          document.getElementById('donationAmount').textContent = hit[2] + '원';
+          document.getElementById('donationLine').classList.add('show');
+          return;
+        } catch (e) { /* 다음 메시지로 */ }
+      }
     }
     function openMessage(i) {
       i = i || 0;
