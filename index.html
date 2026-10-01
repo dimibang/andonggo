@@ -192,7 +192,7 @@
     /* 후원금 총액 — 회장 메시지에서 뽑아 메시지 버튼 위에 한 줄로 */
     .donation-line {
       display: none; align-items: baseline; justify-content: space-between; gap: 8px;
-      margin: 0 0 8px; padding: 10px 14px; border-radius: 10px;
+      margin: 0 0 12px; padding: 10px 14px; border-radius: 10px;
       background: #f0f7ff; border: 1px solid #cfe0f5; color: var(--text-sub); font-size: 0.86rem;
     }
     .donation-line.show { display: flex; }
@@ -266,6 +266,7 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
+      margin-bottom: 12px;   /* 숫자 칸 → 후원금 줄 → 메시지 버튼 → 표: 세로 간격 12px로 통일 */
       text-align: center;
     }
     .summary-box {
