@@ -776,17 +776,21 @@
       : esc(name);
 
     // 기수 이름에 졸업년도와 2026년 나이를 붙입니다 (27회 → 27회(1978졸업, 67세))
-    function label(name) {
+    // 기별 졸업생 수 — 출처: 「기수별 졸업생 수.pdf」(1회~75회, 합계 23,440명)
+    const GRADS = [55,119,177,255,252,290,281,234,304,262,228,193,249,260,273,284,287,314,297,348,364,366,352,470,488,497,456,485,485,488,481,582,570,582,599,574,534,541,537,518,485,523,487,388,382,371,363,362,352,337,298,257,256,237,234,208,203,172,175,180,170,167,169,179,175,166,149,152,143,137,128,129,131,122,122];
+    function label(name, withGrads) {
       const m = /^(\d+)회$/.exec(name);
       if (!m) return esc(name);
       const n = +m[1];
+      if (withGrads && GRADS[n - 1])
+        return `${esc(name)} <span class="gisu-sub">(${1951 + n}년 ${GRADS[n - 1]}명 졸업, ${94 - n}세)</span>`;
       return `${esc(name)} <span class="gisu-sub">(${1951 + n}졸업, ${94 - n}세)</span>`;
     }
 
     function rowsHtml(rows, total, withInfo) {
       const body = rows.map(item => `
         <tr class="${item.current > 0 ? 'has' : ''}">
-          <td class="highlight-name">${withInfo ? label(item.name) : regionLabel(item.name)}</td>
+          <td class="highlight-name">${withInfo ? label(item.name, true) : regionLabel(item.name)}</td>
           <td><strong class="${item.current > 0 ? '' : 'cnt-zero'}">${item.current}</strong></td>
           <td><span class="${item.family > 0 ? '' : 'cnt-zero'}">${item.family}</span></td>
         </tr>`).join('');
