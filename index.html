@@ -190,17 +190,19 @@
     #schedTitle { flex: 1; min-width: 0; word-break: keep-all; line-height: 1.4; padding-right: 8px; }
     .sched-close { white-space: nowrap; flex-shrink: 0; }
     /* 사진 1만 장 올리기 — 포스터 바로 아래, 가장 먼저 눈에 띄는 큰 버튼(카카오톡 오픈채팅으로) */
+    /* 평소엔 회색(다른 것이 먼저 보이게), 행사 당일엔 class에 live 를 붙여 주황으로 */
     .photo-cta {
-      display: flex; align-items: center; gap: 14px;
-      margin: 0 0 14px; padding: 16px 18px; border-radius: 16px;
-      background: #f97316; color: #ffffff; text-decoration: none;
-      box-shadow: 0 6px 18px rgba(249, 115, 22, 0.35);
+      display: flex; align-items: center; gap: 12px;
+      margin: 12px 0 14px; padding: 9px 16px; border-radius: 14px;
+      background: #64748b; color: #ffffff; text-decoration: none;
+      box-shadow: 0 3px 10px rgba(100, 116, 139, 0.25);
     }
+    .photo-cta.live { background: #f97316; box-shadow: 0 6px 18px rgba(249, 115, 22, 0.35); }
     .photo-cta:active { filter: brightness(0.94); }
-    .photo-cta .cam { font-size: 2.2rem; line-height: 1; }
+    .photo-cta .cam { font-size: 1.8rem; line-height: 1; }
     .photo-cta .txt { flex: 1; min-width: 0; }
-    .photo-cta .t1 { display: block; font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; }
-    .photo-cta .t2 { display: block; margin-top: 3px; font-size: 0.82rem; font-weight: 600; opacity: 0.95; word-break: keep-all; }
+    .photo-cta .t1 { display: block; font-size: 1.12rem; font-weight: 800; letter-spacing: -0.02em; }
+    .photo-cta .t2 { display: block; margin-top: 2px; font-size: 0.76rem; font-weight: 600; opacity: 0.95; word-break: keep-all; }
     .photo-cta .go { font-size: 1.6rem; font-weight: 800; }
     /* 후원금 총액 — 회장 메시지에서 뽑아 메시지 버튼 위에 한 줄로 */
     .donation-line {
