@@ -189,6 +189,19 @@
     /* 창 제목이 길면 낱말 단위로 줄바꿈, 닫기 버튼은 한 줄 유지 */
     #schedTitle { flex: 1; min-width: 0; word-break: keep-all; line-height: 1.4; padding-right: 8px; }
     .sched-close { white-space: nowrap; flex-shrink: 0; }
+    /* 사진 1만 장 올리기 — 포스터 바로 아래, 가장 먼저 눈에 띄는 큰 버튼(카카오톡 오픈채팅으로) */
+    .photo-cta {
+      display: flex; align-items: center; gap: 14px;
+      margin: 0 0 14px; padding: 16px 18px; border-radius: 16px;
+      background: #f97316; color: #ffffff; text-decoration: none;
+      box-shadow: 0 6px 18px rgba(249, 115, 22, 0.35);
+    }
+    .photo-cta:active { filter: brightness(0.94); }
+    .photo-cta .cam { font-size: 2.2rem; line-height: 1; }
+    .photo-cta .txt { flex: 1; min-width: 0; }
+    .photo-cta .t1 { display: block; font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; }
+    .photo-cta .t2 { display: block; margin-top: 3px; font-size: 0.82rem; font-weight: 600; opacity: 0.95; word-break: keep-all; }
+    .photo-cta .go { font-size: 1.6rem; font-weight: 800; }
     /* 후원금 총액 — 회장 메시지에서 뽑아 메시지 버튼 위에 한 줄로 */
     .donation-line {
       display: none; align-items: baseline; justify-content: space-between; gap: 8px;
@@ -404,6 +417,14 @@
     <div class="poster-hero"></div>
 
     <div class="content-wrap">
+      <a class="photo-cta" href="https://open.kakao.com/o/giWAFnQi" target="_blank" rel="noopener">
+        <span class="cam">📸</span>
+        <span class="txt">
+          <span class="t1">사진 1만 장 올리기</span>
+          <span class="t2">카카오톡 오픈채팅방으로 · 사진은 「원본」으로 보내 주세요</span>
+        </span>
+        <span class="go">›</span>
+      </a>
 
       <div class="card">
         <div class="card-title">
