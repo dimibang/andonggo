@@ -221,6 +221,17 @@
       font-size: 0.8rem; font-weight: 600; padding: 5px 10px; border-radius: 999px; cursor: pointer;
     }
     .msg-dates button.on { background: var(--primary-color); border-color: var(--primary-color); color: #ffffff; }
+    /* 지난 글 목록 */
+    .arch-list { display: flex; flex-direction: column; gap: 8px; white-space: normal; }
+    .arch-item {
+      display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+      background: #f8fafc; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 12px;
+      font-size: 0.9rem; color: var(--text-main);
+    }
+    .arch-item:active { background: #eef4fb; }
+    .arch-item .d { flex-shrink: 0; font-weight: 800; color: var(--primary-color); min-width: 76px; }
+    .arch-item .p { color: var(--text-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .arch-back { margin-bottom: 10px; border: none; background: none; color: var(--primary-color); font-weight: 700; font-size: 0.85rem; cursor: pointer; padding: 0; }
     /* 스크롤은 되되 막대는 숨긴다 */
     .sched-body { scrollbar-width: none; -ms-overflow-style: none; }
     .sched-body::-webkit-scrollbar { display: none; }
@@ -543,7 +554,7 @@
       if (textCache[file]) { box.innerHTML = textCache[file]; return; }
       box.textContent = '불러오는 중…';
       try {
-        const res = await fetch('./' + encodeURIComponent(file) + '?t=' + Date.now(), { cache: 'no-store' });
+        const res = await fetch('./' + file.split('/').map(encodeURIComponent).join('/') + '?t=' + Date.now(), { cache: 'no-store' });
         if (!res.ok) throw new Error(res.status);
         const text = new TextDecoder('utf-8').decode(await res.arrayBuffer());
         const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -605,14 +616,43 @@
         } catch (e) { /* 다음 메시지로 */ }
       }
     }
+    // 지난 글(2~8월) — 지난글/list.json 의 목록. 날짜 단추 끝 '지난 글' 단추로 연다.
+    let archive = [];
+    fetch('./' + encodeURIComponent('지난글') + '/list.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : []).then(a => { archive = a || []; }).catch(() => {});
+    const MSG_TITLE = '💌 김명돌 제18대 안동고등학교 총동창회장 메시지 · ';
+    function drawMsgBar(on) {
+      const bar = document.getElementById('msgDates');
+      let h = msgs.map((m, k) =>
+        '<button type="button" class="' + (k === on ? 'on' : '') + '" onclick="openMessage(' + k + ')">' + m.label + '</button>').join('');
+      if (archive.length)
+        h += '<button type="button" class="' + (on === 'A' ? 'on' : '') + '" onclick="openArchive()">지난 글(2~8월)</button>';
+      bar.innerHTML = h;
+      bar.classList.toggle('show', msgs.length + (archive.length ? 1 : 0) > 1);
+    }
     function openMessage(i) {
       i = i || 0;
       if (!msgs[i]) return;
-      const bar = document.getElementById('msgDates');
-      bar.innerHTML = msgs.map((m, k) =>
-        '<button type="button" class="' + (k === i ? 'on' : '') + '" onclick="openMessage(' + k + ')">' + m.label + '</button>').join('');
-      bar.classList.toggle('show', msgs.length > 1);
-      openTextModal('💌 김명돌 제18대 안동고등학교 총동창회장 메시지 · ' + msgs[i].label, msgs[i].file);
+      drawMsgBar(i);
+      openTextModal(MSG_TITLE + msgs[i].label, msgs[i].file);
+    }
+    function openArchive() {
+      drawMsgBar('A');
+      document.getElementById('schedTitle').textContent = MSG_TITLE + '지난 글(2~8월)';
+      document.getElementById('schedOverlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const box = document.getElementById('schedBody');
+      box.scrollTop = 0;
+      box.innerHTML = '<div class="arch-list">' + archive.map((a, k) =>
+        '<button type="button" class="arch-item" onclick="openArchiveItem(' + k + ')"><span class="d">' + a.label +
+        '</span><span class="p">' + esc(a.preview) + '</span></button>').join('') + '</div>';
+    }
+    async function openArchiveItem(k) {
+      const a = archive[k]; if (!a) return;
+      await openTextModal(MSG_TITLE + a.label + ' (지난 글)', a.file);
+      const box = document.getElementById('schedBody');
+      box.insertAdjacentHTML('afterbegin', '<button type="button" class="arch-back" onclick="openArchive()">‹ 지난 글 목록</button>\n');
     }
     findMessages();
     function closeSchedule() {
