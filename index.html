@@ -600,8 +600,11 @@
       showDonation();
     }
     // 예: '9월 30일 어제까지 후원금 총액(약정액 포함)은 788,320,000원 입니다'
+    // 후원금 총액 — ① 회장 메시지의 'N월 N일 … 후원금 총액(약정…)은 N원' 문장, ② 대표가 직접 정한 값(후원금.json).
+    // 둘 중 날짜가 늦은 것을 보인다(같은 날이면 ②). 메시지에 정확한 금액이 없는 날은 ②로 정한다.
     async function showDonation() {
-      const re = /(\d{1,2}월\s*\d{1,2}일)[^\n]{0,20}?후원금\s*총액\s*\(약정[^)]*\)\s*[은는]?\s*([\d,]+)\s*원/;
+      const re = /(\d{1,2})월\s*(\d{1,2})일[^\n]{0,20}?후원금\s*총액\s*\(약정[^)]*\)\s*[은는]?\s*([\d,]+)\s*원/;
+      let best = null;   // { key: 월*100+일, label, amount }
       for (const m of msgs) {
         try {
           const res = await fetch('./' + encodeURIComponent(m.file) + '?t=' + Date.now(), { cache: 'no-store' });
@@ -609,12 +612,22 @@
           const text = new TextDecoder('utf-8').decode(await res.arrayBuffer());
           const hit = re.exec(text);
           if (!hit) continue;
-          document.getElementById('donationLabel').textContent = hit[1].replace(/\s+/g, ' ') + ' 후원금 총액(약정 포함)';
-          document.getElementById('donationAmount').textContent = hit[2] + '원';
-          document.getElementById('donationLine').classList.add('show');
-          return;
+          best = { key: +hit[1] * 100 + +hit[2], label: hit[1] + '월 ' + hit[2] + '일', amount: hit[3] };
+          break;
         } catch (e) { /* 다음 메시지로 */ }
       }
+      try {
+        const r = await fetch('./' + encodeURIComponent('후원금.json') + '?t=' + Date.now(), { cache: 'no-store' });
+        if (r.ok) {
+          const o = await r.json();
+          const k = +o.month * 100 + +o.day;
+          if (!best || k >= best.key) best = { key: k, label: o.month + '월 ' + o.day + '일', amount: o.amount };
+        }
+      } catch (e) { /* 없으면 메시지 값만 */ }
+      if (!best) return;
+      document.getElementById('donationLabel').textContent = best.label + ' 후원금 총액(약정 포함)';
+      document.getElementById('donationAmount').textContent = best.amount + '원';
+      document.getElementById('donationLine').classList.add('show');
     }
     // 지난 글(2~8월) — 지난글/list.json 의 목록. 날짜 단추 끝 '지난 글' 단추로 연다.
     let archive = [];
