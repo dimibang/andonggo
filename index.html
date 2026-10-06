@@ -250,6 +250,9 @@
     .src-sub { font-size: 0.8rem; font-weight: 400; color: #64748b; }
     .top-table { margin-top: 10px; }
     .top-table .top-sum { font-weight: 800; color: var(--primary-color); }
+    .top-table .top-gap { font-size: 0.85rem; font-weight: 600; color: #64748b; }
+    .top-table tr.top-cut td { border-bottom: 2px solid #f97316; }      /* 5위까지 금1돈 — 아래 구분선 */
+    .top-table tr.top-rest td { font-size: 0.92rem; }
     /* 좁은 휴대폰(380px 이하)에서 합계 칸이 늘어도 한 줄에 들어가게 */
     @media (max-width: 380px) {
       .top-table td, .top-table th { padding-left: 4px; padding-right: 4px; }
@@ -473,9 +476,9 @@
           </tbody>
         </table>
         <table class="source-table top-table">
-          <thead><tr><th>🏆 기수별 상위 5 <span class="prize">(각 금1돈)</span></th><th>동문</th><th>동반</th><th>합계</th></tr></thead>
+          <thead><tr><th>🏆 기수별 상위 15 <span class="prize">(1~5위 각 금1돈)</span></th><th>동문</th><th>동반</th><th>합계</th><th>차이</th></tr></thead>
           <tbody id="top-tbody">
-            <tr class="msg-row"><td colspan="3">불러오는 중…</td></tr>
+            <tr class="msg-row"><td colspan="5">불러오는 중…</td></tr>
           </tbody>
         </table>
         <div class="grow-box" id="grow-box" hidden>
@@ -832,17 +835,19 @@
       document.getElementById('region-tbody').innerHTML = rowsHtml(regions, total);
       document.getElementById('grade-tbody').innerHTML  = rowsHtml(grades, sumOf(grades), true);
 
-      // 기수별 상위 5 — 포스터 기준: 동문+동반 합계 순, 같으면 동문 많은 쪽 → 빠른 기수
-      const top = grades.filter(g => g.current > 0)
-        .sort((a, b) => (b.current + b.family) - (a.current + a.family) || b.current - a.current || parseInt(a.name) - parseInt(b.name))
-        .slice(0, 5);
-      document.getElementById('top-tbody').innerHTML = top.map((g, i) => `
-        <tr>
+      // 기수별 상위 15 — 포스터 기준: 동문+동반 합계 순, 같으면 동문 많은 쪽 → 빠른 기수. 금1돈은 1~5위.
+      // 차이 = 바로 아래 순위와의 합계 차이(15위는 16위와). 5위 아래에 구분선(대표 10/6)
+      const ranked = grades.filter(g => g.current > 0)
+        .sort((a, b) => (b.current + b.family) - (a.current + a.family) || b.current - a.current || parseInt(a.name) - parseInt(b.name));
+      const tot = g => g.current + g.family;
+      document.getElementById('top-tbody').innerHTML = ranked.slice(0, 15).map((g, i) => `
+        <tr class="${i < 5 ? 'top-prize' : 'top-rest'}${i === 4 ? ' top-cut' : ''}">
           <td><span class="rank">${i + 1}위</span> <span class="highlight-name">${label(g.name)}</span></td>
           <td><strong>${g.current}</strong></td>
           <td><span class="${g.family > 0 ? '' : 'cnt-zero'}">${g.family}</span></td>
-          <td class="top-sum">${g.current + g.family}</td>
-        </tr>`).join('') || `<tr class="msg-row"><td colspan="4">집계 없음</td></tr>`;
+          <td class="top-sum">${tot(g)}</td>
+          <td class="top-gap">${ranked[i + 1] ? (tot(g) - tot(ranked[i + 1]) > 0 ? '+' + (tot(g) - tot(ranked[i + 1])) : '0') : ''}</td>
+        </tr>`).join('') || `<tr class="msg-row"><td colspan="5">집계 없음</td></tr>`;
 
       // 어제보다 5명 이상 늘어난 기수 (기준: snapshot.json — 마지막으로 올린 집계)
       const box = document.getElementById('grow-box');
