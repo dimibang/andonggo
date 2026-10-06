@@ -573,21 +573,28 @@
 
     // 김명돌 회장 메시지 — 오늘부터 14일 전까지 거슬러 올라가며 가장 최근 '김명돌회장 메시지 YYYY-MM-DD.txt' 를 찾는다.
     // 매일 글 파일만 올리면 되고 이 페이지는 손대지 않는다. 하나도 없으면 버튼을 숨긴 채 둔다.
-    // 김명돌 회장 메시지 — 오늘부터 30일 전까지 '김명돌회장 메시지 YYYY-MM-DD.txt' 를 모두 찾는다(최근 것이 앞).
+    // 김명돌 회장 메시지 — 오늘부터 30일 전까지 '김명돌회장 메시지 YYYY-MM-DD.txt'(같은 날 둘 이상이면 -1, -2 …) 를 모두 찾는다(최근 것이 앞).
     // 버튼은 가장 최근 메시지를 열고, 창 위 날짜 단추로 지난 메시지도 볼 수 있다. 매일 글 파일만 올리면 된다.
     let msgs = [];
     async function findMessages() {
       const pad = n => String(n).padStart(2, '0');
       const days = [];
       for (let i = 0; i < 31; i++) { const d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
+      // 하루에 글이 둘 이상이면 'YYYY-MM-DD-1.txt', '-2.txt' … 처럼 연번을 붙인다(늦은 번호가 앞).
+      const has = async f => {
+        try { return (await fetch('./' + encodeURIComponent(f) + '?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' })).ok; }
+        catch (e) { return false; }
+      };
       const found = await Promise.all(days.map(async d => {
-        const file = '김명돌회장 메시지 ' + d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '.txt';
-        try {
-          const res = await fetch('./' + encodeURIComponent(file) + '?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
-          return res.ok ? { file: file, label: (d.getMonth() + 1) + '월 ' + d.getDate() + '일' } : null;
-        } catch (e) { return null; }
+        const base = '김명돌회장 메시지 ' + d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+        const label = (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+        const [one, first] = await Promise.all([has(base + '.txt'), has(base + '-1.txt')]);
+        if (!first) return one ? [{ file: base + '.txt', label: label }] : [];
+        const list = [base + '-1.txt'];
+        for (let n = 2; n < 10 && await has(base + '-' + n + '.txt'); n++) list.push(base + '-' + n + '.txt');
+        return list.map((f, k) => ({ file: f, label: label + ' (' + (k + 1) + ')' })).reverse();
       }));
-      msgs = found.filter(Boolean);
+      msgs = found.flat();
       // 날짜 없는 고정 글 — 회장 초청의 글은 날짜 단추 끝에 늘 붙인다
       try {
         const inv = '김명돌회장 초청의 글 2026-10-01.txt';
