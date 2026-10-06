@@ -252,6 +252,15 @@
     .top-table .top-sum { font-weight: 800; color: var(--primary-color); }
     .top-table thead tr:first-child th { background: #e2e8f0; }   /* 순위표 머리줄 — 대표 10/6 시안 A */
     .top-table tr.top-note td { max-width: 0; font-size: 0.78rem; font-weight: 500; color: #b45309; background: #fff7ed; text-align: left; padding: 6px 10px; }
+    /* 기수별 순위: 10위 이상 두 자리 순위에서도 한 줄로(대표 10/6) — 줄바꿈 금지 + 자간·글자 조금 좁힘 */
+    .top-table tbody td:first-child { white-space: nowrap; letter-spacing: -0.03em; max-width: 0; width: 100%; overflow: hidden; text-overflow: ellipsis; }   /* 글자가 큰 폰에서도 표 밖으로 안 나가게 — 넘치면 졸업·나이 끝을 … 로 */
+    .top-table tbody td:first-child .rank { margin-right: 2px; letter-spacing: -0.05em; }
+    .top-table tbody td:first-child .gisu-sub { font-size: 0.7rem; letter-spacing: -0.05em; }
+    @media (max-width: 420px) {   /* 폰: 숫자 칸 여백을 줄여 기수 칸에 자리를 더 준다 */
+      .top-table tbody td:not(:first-child), .top-table thead th:not(:first-child) { padding-left: 2px; padding-right: 2px; }
+      .top-table tbody td:first-child { padding-left: 6px; padding-right: 2px; }
+      .top-table tbody td:first-child .gisu-sub { font-size: 0.64rem; }
+    }
     .top-table .top-gap { font-size: 0.85rem; font-weight: 600; color: #64748b; }
     .top-table tr.top-cut td { border-bottom: 2px solid #f97316; }      /* 5위까지 금1돈 — 아래 구분선 */
     .top-table tr.top-rest td { font-size: 0.92rem; }
