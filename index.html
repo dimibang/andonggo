@@ -213,6 +213,17 @@
     .donation-line.show { display: flex; }
     .donation-line #donationLabel { word-break: keep-all; }
     .donation-line .amount { color: var(--primary-color); font-weight: 800; font-size: 1.05rem; white-space: nowrap; }
+    /* 후원금 줄을 누르면 기수별 모금 현황 표(후원금_기수별.json) — 대표 10/7 */
+    .donation-line { cursor: pointer; }
+    .donation-line { flex-wrap: wrap; row-gap: 4px; }
+    .donation-line .don-more { width: 100%; text-align: right; font-size: 0.8rem; font-weight: 700; color: var(--primary-color); }
+    .don-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; white-space: normal; line-height: 1.4; }
+    .don-table th { background: #e2e8f0; color: var(--text-sub); font-weight: 700; padding: 7px 6px; position: sticky; top: -14px; }
+    .don-table td { padding: 6px; border-bottom: 1px solid #eef2f6; text-align: right; }
+    .don-table td:first-child, .don-table th:first-child { text-align: center; }
+    .don-table td.note { text-align: left; font-size: 0.75rem; color: #b45309; }
+    .don-table tfoot td { font-weight: 800; border-top: 2px solid var(--primary-color); border-bottom: none; padding-top: 9px; }
+    .don-base { display: block; text-align: right; font-size: 0.78rem; color: #64748b; margin-bottom: 6px; }
     /* 회장 메시지 창의 날짜 단추 — 지난 메시지도 골라 본다 */
     .msg-dates { display: none; gap: 6px; flex-wrap: wrap; padding: 10px 16px 0; }
     .msg-dates.show { display: flex; }
@@ -475,8 +486,8 @@
             <div class="summary-value highlight" id="total-count">-</div>
           </div>
         </div>
-        <div class="donation-line" id="donationLine">
-          <span id="donationLabel">후원금 총액(약정 포함)</span><span class="amount" id="donationAmount"></span>
+        <div class="donation-line" id="donationLine" role="button" tabindex="0" onclick="openDonationTable()">
+          <span id="donationLabel">후원금 총액(약정 포함)</span><span class="amount" id="donationAmount"></span><span class="don-more">📊 기수별 현황 보기 ›</span>
         </div>
         <button class="btn-message" id="btnMessage" type="button" onclick="openMessage()">
           <span class="label">💌 김명돌 제18대 안동고등학교 총동창회장 메시지</span> <span class="date" id="msgDate"></span><span class="arrow">›</span>
@@ -561,6 +572,25 @@
     // 일정안내 — 내용은 저장소의 일정안내.txt 를 그대로 읽는다(글만 바꾸면 페이지는 손대지 않아도 된다)
     // 일정안내·회장 메시지가 같은 창을 쓴다. 글은 저장소의 .txt 를 그대로 읽는다.
     const textCache = {};
+    // 기수별 후원금 표 — 저장소의 후원금_기수별.json 을 읽는다. 표 이미지가 오면 json만 바꾸면 된다.
+    async function openDonationTable() {
+      document.getElementById('schedTitle').textContent = '💰 후원금 모금 현황 (기수별)';
+      const bar = document.getElementById('msgDates'); if (bar) bar.classList.remove('show');
+      document.getElementById('schedOverlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      const box = document.getElementById('schedBody');
+      box.scrollTop = 0; box.textContent = '불러오는 중…';
+      try {
+        const r = await fetch('./' + encodeURIComponent('후원금_기수별.json') + '?t=' + Date.now(), { cache: 'no-store' });
+        const d = await r.json();
+        const won = v => Number(v).toLocaleString('ko-KR');
+        box.innerHTML = '<span class="don-base">' + d['기준'] + ' · 단위 원</span>' +
+          '<table class="don-table"><thead><tr><th>기수</th><th>인원</th><th>금액</th><th></th></tr></thead><tbody>' +
+          d.rows.map(x => '<tr><td>' + (/^\d+$/.test(x['기수']) ? x['기수'] + '회' : x['기수']) +
+            '</td><td>' + x['인원'] + '</td><td>' + won(x['금액']) + '</td><td class="note">' + (x['비고'] || '') + '</td></tr>').join('') +
+          '</tbody><tfoot><tr><td>합계</td><td>' + d['합계인원'] + '</td><td>' + won(d['합계금액']) + '</td><td></td></tr></tfoot></table>';
+      } catch (e) { box.textContent = '표를 불러오지 못했습니다. 잠시 후 다시 눌러 주세요.'; }
+    }
     async function openTextModal(title, file) {
       document.getElementById('schedTitle').textContent = title;
       document.getElementById('schedOverlay').classList.add('open');
