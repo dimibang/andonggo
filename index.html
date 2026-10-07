@@ -901,7 +901,7 @@
     const setText = (id, v) => { document.getElementById(id).innerText = v; };
 
     // 기수 숫자를 참석명단(엑셀 정본, 중복 정리됨) 기준으로 맞춘다 — 대표 10/7: 27회로 먼저 실증
-    const ROSTER_GISU = ['27회', '1회'];  // 1회: 참석 0인 기수 실증(10/7) — 명단에 없으면 0, 눌러도 안내
+    const ROSTER_GISU = Array.from({ length: 27 }, (_, i) => (i + 1) + '회');  // 10/7: 27회 실증 → 1회(참석 0) → 1~27회. 명단에 없으면 0, 눌러도 안내
     let ROSTER = null;
     fetch('./' + encodeURIComponent('참석명단.json') + '?t=' + Date.now(), { cache: 'no-store' })
       .then(r => r.ok ? r.json() : null).then(d => { ROSTER = d; try { render(); } catch (e) { /* 아직 시트 전 */ } }).catch(() => {});
