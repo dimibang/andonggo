@@ -268,6 +268,7 @@
     .source-table th { position: static; padding: 8px 6px; font-size: 0.9rem; }
     .source-table td { padding: 10px 6px; font-weight: 600; }
     .source-table td:first-child { text-align: left; padding-left: 10px; }
+    .source-table th.grp-th { font-size: 0.78rem; line-height: 1.25; white-space: nowrap; min-width: 3.6em; }
     .src-sub { font-size: 0.8rem; font-weight: 400; color: #64748b; }
     .top-table { margin-top: 10px; }
     .top-table .top-sum { font-weight: 800; color: var(--primary-color); }
@@ -509,10 +510,10 @@
           <span class="label">💌 김명돌 제18대 안동고등학교 총동창회장 메시지</span> <span class="date" id="msgDate"></span><span class="arrow">›</span>
         </button>
         <table class="source-table">
-          <thead><tr><th>구분</th><th>동문</th><th>동반</th></tr></thead>
+          <thead><tr><th>구분</th><th>동문</th><th>동반<br>가족</th><th class="grp-th">재학생<br>학부모<br>시민</th></tr></thead>
           <tbody>
-            <tr><td>온라인 신청 <span class="src-sub">실시간</span></td><td id="on-alumni">-</td><td id="on-family">-</td></tr>
-            <tr><td>오프라인 집계 <span class="src-sub" id="list-stamp"></span></td><td id="list-alumni">-</td><td id="list-family">-</td></tr>
+            <tr><td>온라인 신청 <span class="src-sub">실시간</span></td><td id="on-alumni">-</td><td id="on-family">-</td><td class="cnt-zero">-</td></tr>
+            <tr><td>오프라인 집계 <span class="src-sub" id="list-stamp"></span></td><td id="list-alumni">-</td><td id="list-family">-</td><td id="list-group">-</td></tr>
           </tbody>
         </table>
         <table class="source-table top-table">
@@ -965,13 +966,15 @@
       setText('on-family', on.family);
       if (list) {
         const li = sumOf(list.regionOrder.map(n => list.region[n]));
-        setText('list-alumni', li.current + GROUP);   // 재학생·학부모·시민 단체는 오프라인으로 들어온 숫자(대표 10/7)
+        setText('list-alumni', li.current);
+        setText('list-group', GROUP);   // 재학생·학부모·시민 단체는 오프라인으로 들어온 숫자 — 자기 칸에(대표 10/7)
         setText('list-family', li.family);
-        setText('list-stamp', (list.stamp ? `${list.stamp} 반영 · ` : '') + `재학생·학부모·시민 ${GROUP} 포함`);
+        setText('list-stamp', list.stamp ? `${list.stamp} 반영` : '');
       } else {
         setText('list-alumni', '-');
         setText('list-family', '-');
         setText('list-stamp', '불러오지 못함');
+        setText('list-group', GROUP);
       }
 
       const d = new Date();
