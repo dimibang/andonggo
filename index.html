@@ -594,7 +594,7 @@
         const r = await fetch('./' + encodeURIComponent('참석명단.json') + '?t=' + Date.now(), { cache: 'no-store' });
         const d = await r.json(); const g = d['기수'][name];
         const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-        if (!g) { box.textContent = name + ' 명단이 아직 없습니다.'; return; }
+        if (!g) { box.innerHTML = '<span class="don-base">' + d['기준'] + ' 기준</span><div class="roster-sum">' + esc(name) + ' — 아직 참석 신청자가 없습니다.</div><div class="roster-note">※ 신청하신 분이 있는데 빠졌다면 동기회 총무에게 알려 주세요<br>※ 방금 신청한 분은 다음 반영 때 들어갑니다</div>'; return; }
         box.innerHTML = '<span class="don-base">' + d['기준'] + ' 기준</span>' +
           '<div class="roster-sum">참석 동문 ' + g['동문'] + '명 (동반 ' + g['동반'] + '명)</div>' +
           g['지회별'].map(x => '<div class="roster-grp">■ ' + esc(x['지회']) + ' ' + x['명단'].length + '명' +
@@ -885,7 +885,7 @@
 
     function rowsHtml(rows, total, withInfo) {
       const body = rows.map(item => `
-        <tr class="${item.current > 0 ? 'has' : ''}${withInfo && item.current > 0 ? ' roster' : ''}"${withInfo && item.current > 0 ? ` onclick="openRoster('${item.name}')"` : ''}>
+        <tr class="${item.current > 0 ? 'has' : ''}${withInfo && (item.current > 0 || ROSTER_GISU.includes(item.name)) ? ' roster' : ''}"${withInfo && (item.current > 0 || ROSTER_GISU.includes(item.name)) ? ` onclick="openRoster('${item.name}')"` : ''}>
           <td class="highlight-name">${withInfo ? label(item.name, true) : regionLabel(item.name)}</td>
           <td><strong class="${item.current > 0 ? '' : 'cnt-zero'}">${item.current}</strong></td>
           <td><span class="${item.family > 0 ? '' : 'cnt-zero'}">${item.family}</span></td>
@@ -901,7 +901,7 @@
     const setText = (id, v) => { document.getElementById(id).innerText = v; };
 
     // 기수 숫자를 참석명단(엑셀 정본, 중복 정리됨) 기준으로 맞춘다 — 대표 10/7: 27회로 먼저 실증
-    const ROSTER_GISU = ['27회'];
+    const ROSTER_GISU = ['27회', '1회'];  // 1회: 참석 0인 기수 실증(10/7) — 명단에 없으면 0, 눌러도 안내
     let ROSTER = null;
     fetch('./' + encodeURIComponent('참석명단.json') + '?t=' + Date.now(), { cache: 'no-store' })
       .then(r => r.ok ? r.json() : null).then(d => { ROSTER = d; try { render(); } catch (e) { /* 아직 시트 전 */ } }).catch(() => {});
@@ -910,7 +910,7 @@
       const regions = merge('region', 'regionOrder');
       const grades  = merge('grade', 'gradeOrder');
       if (ROSTER) for (const g of grades)
-        if (ROSTER_GISU.includes(g.name) && ROSTER['기수'][g.name]) { g.current = ROSTER['기수'][g.name]['동문']; g.family = ROSTER['기수'][g.name]['동반']; }
+        if (ROSTER_GISU.includes(g.name)) { const r = ROSTER['기수'][g.name]; g.current = r ? r['동문'] : 0; g.family = r ? r['동반'] : 0; }
       const total   = sumOf(regions);
 
       document.getElementById('region-tbody').innerHTML = rowsHtml(regions, total);
