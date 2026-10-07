@@ -327,24 +327,25 @@
     /* 전체 종합 현황 카드 */
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(4, 1fr);   /* 동문·동반·단체(재학생·학부모·시민)·합계 — 대표 10/7 */
+      gap: 6px;
       margin-bottom: 12px;   /* 숫자 칸 → 후원금 줄 → 메시지 버튼 → 표: 세로 간격 12px로 통일 */
       text-align: center;
     }
     .summary-box {
+      display: flex; flex-direction: column; justify-content: space-between;   /* 이름표가 두 줄이어도 숫자 줄을 맞춘다 */
       background: #ffffff;
-      padding: 12px 6px;
+      padding: 10px 4px;
       border-radius: 10px;
       border: 1px solid var(--border-color);
     }
     .summary-label {
-      font-size: 0.75rem;
+      font-size: 0.75rem; word-break: keep-all; line-height: 1.25;
       color: var(--text-sub);
       margin-bottom: 4px;
     }
     .summary-value {
-      font-size: 1.2rem;
+      font-size: clamp(1rem, 4.6vw, 1.2rem); white-space: nowrap;   /* 네 칸이 되어 휴대폰에서 '1397명'이 꺾이지 않게 */
       font-weight: 800;
       color: var(--text-main);
     }
@@ -491,6 +492,10 @@
           <div class="summary-box">
             <div class="summary-label">동반 가족</div>
             <div class="summary-value" id="family-count">-</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">재학생·학부모·시민</div>
+            <div class="summary-value" id="group-count">210명</div>
           </div>
           <div class="summary-box">
             <div class="summary-label">합계</div>
@@ -899,6 +904,8 @@
     const setText = (id, v) => { document.getElementById(id).innerText = v; };
 
     // 기수 숫자를 참석명단(엑셀 정본, 중복 정리됨) 기준으로 맞춘다 — 대표 10/7: 27회로 먼저 실증
+    // 재학생 180 · 학부모 30 · 시민(현장 등록, 사전 0) — 엑셀 동문 명단과 따로 센다(대표 10/7)
+    const GROUP = 180 + 30 + 0;
     const ROSTER_GISU = Array.from({ length: 80 }, (_, i) => (i + 1) + '회');  // 10/7: 27회 실증 → 1회 → 1~27회 → 전 기수. 명단에 없으면 0, 눌러도 안내
     // 지회 표·맨 위 카드도 참석명단.json(엑셀 정본)의 합계로 — 시트 지회 이름에 맞춘다
     const ZONE = { '안동': '안동지회', '서울': '재경지회', '대구': '대구지회', '부산': '부산지회', '울산': '울산지회', '대전': '대전지회', '영주': '영주지회', '구미': '구미지회', '창원': '창원지회', '문경': '문경지회', '경주': '경주지회', '안동시청': '안동시청동문회', '기타': '기타' };
@@ -950,7 +957,8 @@
 
       setText('alumni-count', total.current + '명');
       setText('family-count', total.family + '명');
-      setText('total-count',  (total.current + total.family) + '명');
+      setText('group-count', GROUP + '명');
+      setText('total-count',  (total.current + total.family + GROUP) + '명');
 
       const on = sumOf(online.regionOrder.map(n => online.region[n]));
       setText('on-alumni', on.current);
