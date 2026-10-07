@@ -965,9 +965,9 @@
       setText('on-family', on.family);
       if (list) {
         const li = sumOf(list.regionOrder.map(n => list.region[n]));
-        setText('list-alumni', li.current);
+        setText('list-alumni', li.current + GROUP);   // 재학생·학부모·시민 단체는 오프라인으로 들어온 숫자(대표 10/7)
         setText('list-family', li.family);
-        setText('list-stamp', list.stamp ? `${list.stamp} 반영` : '');
+        setText('list-stamp', (list.stamp ? `${list.stamp} 반영 · ` : '') + `재학생·학부모·시민 ${GROUP} 포함`);
       } else {
         setText('list-alumni', '-');
         setText('list-family', '-');
