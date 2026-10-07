@@ -223,6 +223,16 @@
     .don-table td:first-child, .don-table th:first-child { text-align: center; }
     .don-table td.note { text-align: left; font-size: 0.75rem; color: #b45309; }
     .don-table tfoot td { font-weight: 800; border-top: 2px solid var(--primary-color); border-bottom: none; padding-top: 9px; }
+    /* 기수를 누르면 참석자 이름(참석명단.json — 엑셀 정본에서 만든다) — 대표 10/7 */
+    tr.roster { cursor: pointer; }
+    tr.roster td:first-child::after { content: ' ›'; color: #94a3b8; font-weight: 700; }
+    .roster-sum { font-weight: 800; color: var(--primary-color); margin: 2px 0 10px; }
+    .roster-grp { margin: 10px 0 2px; font-weight: 800; color: var(--text-main); }
+    .roster-grp small { font-weight: 500; color: #64748b; }
+    .roster-names { line-height: 1.9; word-break: keep-all; }
+    .roster-names span { display: inline-block; margin-right: 10px; white-space: nowrap; }
+    .roster-names em { font-style: normal; font-size: 0.8em; color: #c2410c; }
+    .roster-note { margin-top: 14px; font-size: 0.78rem; color: #64748b; line-height: 1.6; }
     .don-base { display: block; text-align: right; font-size: 0.78rem; color: #64748b; margin-bottom: 6px; }
     /* 회장 메시지 창의 날짜 단추 — 지난 메시지도 골라 본다 */
     .msg-dates { display: none; gap: 6px; flex-wrap: wrap; padding: 10px 16px 0; }
@@ -573,6 +583,26 @@
     // 일정안내·회장 메시지가 같은 창을 쓴다. 글은 저장소의 .txt 를 그대로 읽는다.
     const textCache = {};
     // 기수별 후원금 표 — 저장소의 후원금_기수별.json 을 읽는다. 표 이미지가 오면 json만 바꾸면 된다.
+    async function openRoster(name) {
+      document.getElementById('schedTitle').textContent = '📋 ' + name + ' 참석자 명단';
+      const bar = document.getElementById('msgDates'); if (bar) bar.classList.remove('show');
+      document.getElementById('schedOverlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      const box = document.getElementById('schedBody');
+      box.scrollTop = 0; box.textContent = '불러오는 중…';
+      try {
+        const r = await fetch('./' + encodeURIComponent('참석명단.json') + '?t=' + Date.now(), { cache: 'no-store' });
+        const d = await r.json(); const g = d['기수'][name];
+        const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        if (!g) { box.textContent = name + ' 명단이 아직 없습니다.'; return; }
+        box.innerHTML = '<span class="don-base">' + d['기준'] + ' 기준</span>' +
+          '<div class="roster-sum">참석 동문 ' + g['동문'] + '명 (동반 ' + g['동반'] + '명)</div>' +
+          g['지회별'].map(x => '<div class="roster-grp">■ ' + esc(x['지회']) + ' ' + x['명단'].length + '명' +
+            (x['명단'].some(p => p[1]) ? ' <small>(동반 ' + x['명단'].reduce((a, p) => a + p[1], 0) + '명)</small>' : '') + '</div>' +
+            '<div class="roster-names">' + x['명단'].map(p => '<span>' + esc(p[0]) + (p[1] ? '<em>+' + p[1] + '</em>' : '') + '</span>').join('') + '</div>').join('') +
+          '<div class="roster-note">※ +숫자는 동반 가족 수<br>※ 빠진 분·틀린 내용은 동기회 총무에게 알려 주세요<br>※ 방금 신청한 분은 다음 반영 때 들어갑니다</div>';
+      } catch (e) { box.textContent = '명단을 불러오지 못했습니다. 잠시 후 다시 눌러 주세요.'; }
+    }
     async function openDonationTable() {
       document.getElementById('schedTitle').textContent = '💰 후원금 모금 현황 (기수별)';
       const bar = document.getElementById('msgDates'); if (bar) bar.classList.remove('show');
@@ -855,7 +885,7 @@
 
     function rowsHtml(rows, total, withInfo) {
       const body = rows.map(item => `
-        <tr class="${item.current > 0 ? 'has' : ''}">
+        <tr class="${item.current > 0 ? 'has' : ''}${withInfo && item.current > 0 ? ' roster' : ''}"${withInfo && item.current > 0 ? ` onclick="openRoster('${item.name}')"` : ''}>
           <td class="highlight-name">${withInfo ? label(item.name, true) : regionLabel(item.name)}</td>
           <td><strong class="${item.current > 0 ? '' : 'cnt-zero'}">${item.current}</strong></td>
           <td><span class="${item.family > 0 ? '' : 'cnt-zero'}">${item.family}</span></td>
@@ -870,9 +900,17 @@
 
     const setText = (id, v) => { document.getElementById(id).innerText = v; };
 
+    // 기수 숫자를 참석명단(엑셀 정본, 중복 정리됨) 기준으로 맞춘다 — 대표 10/7: 27회로 먼저 실증
+    const ROSTER_GISU = ['27회'];
+    let ROSTER = null;
+    fetch('./' + encodeURIComponent('참석명단.json') + '?t=' + Date.now(), { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null).then(d => { ROSTER = d; try { render(); } catch (e) { /* 아직 시트 전 */ } }).catch(() => {});
+
     function render() {
       const regions = merge('region', 'regionOrder');
       const grades  = merge('grade', 'gradeOrder');
+      if (ROSTER) for (const g of grades)
+        if (ROSTER_GISU.includes(g.name) && ROSTER['기수'][g.name]) { g.current = ROSTER['기수'][g.name]['동문']; g.family = ROSTER['기수'][g.name]['동반']; }
       const total   = sumOf(regions);
 
       document.getElementById('region-tbody').innerHTML = rowsHtml(regions, total);
@@ -884,7 +922,7 @@
         .sort((a, b) => (b.current + b.family) - (a.current + a.family) || b.current - a.current || parseInt(a.name) - parseInt(b.name));
       const tot = g => g.current + g.family;
       document.getElementById('top-tbody').innerHTML = ranked.slice(0, 15).map((g, i) => `
-        <tr class="${i < 5 ? 'top-prize' : 'top-rest'}${i === 4 ? ' top-cut' : ''}">
+        <tr class="${i < 5 ? 'top-prize' : 'top-rest'}${i === 4 ? ' top-cut' : ''} roster" onclick="openRoster('${g.name}')">
           <td><span class="rank">${i + 1}위</span> <span class="highlight-name">${label(g.name)}</span></td>
           <td><strong>${g.current}</strong></td>
           <td><span class="${g.family > 0 ? '' : 'cnt-zero'}">${g.family}</span></td>
