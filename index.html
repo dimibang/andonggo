@@ -901,16 +901,26 @@
     const setText = (id, v) => { document.getElementById(id).innerText = v; };
 
     // 기수 숫자를 참석명단(엑셀 정본, 중복 정리됨) 기준으로 맞춘다 — 대표 10/7: 27회로 먼저 실증
-    const ROSTER_GISU = Array.from({ length: 27 }, (_, i) => (i + 1) + '회');  // 10/7: 27회 실증 → 1회(참석 0) → 1~27회. 명단에 없으면 0, 눌러도 안내
+    const ROSTER_GISU = Array.from({ length: 80 }, (_, i) => (i + 1) + '회');  // 10/7: 27회 실증 → 1회 → 1~27회 → 전 기수. 명단에 없으면 0, 눌러도 안내
+    // 지회 표·맨 위 카드도 참석명단.json(엑셀 정본)의 합계로 — 시트 지회 이름에 맞춘다
+    const ZONE = { '안동': '안동지회', '서울': '재경지회', '대구': '대구지회', '부산': '부산지회', '울산': '울산지회', '대전': '대전지회', '영주': '영주지회', '구미': '구미지회', '창원': '창원지회', '문경': '문경지회', '경주': '경주지회', '안동시청': '안동시청동문회', '기타': '기타' };
     let ROSTER = null;
     fetch('./' + encodeURIComponent('참석명단.json') + '?t=' + Date.now(), { cache: 'no-store' })
       .then(r => r.ok ? r.json() : null).then(d => { ROSTER = d; try { render(); } catch (e) { /* 아직 시트 전 */ } }).catch(() => {});
 
     function render() {
-      const regions = merge('region', 'regionOrder');
+      const regions = (ROSTER && ROSTER['지회합계'])
+        ? ROSTER['지회합계'].map(([z, c, f]) => ({ name: ZONE[z] || z, current: c, family: f }))
+        : merge('region', 'regionOrder');
       const grades  = merge('grade', 'gradeOrder');
       if (ROSTER) for (const g of grades)
         if (ROSTER_GISU.includes(g.name)) { const r = ROSTER['기수'][g.name]; g.current = r ? r['동문'] : 0; g.family = r ? r['동반'] : 0; }
+      // 기수 '기타'(기수 미상) = 엑셀 합계 − 기수 명단 합계
+      if (ROSTER && ROSTER['합계']) for (const g of grades) if (g.name === '기타') {
+        const v = Object.values(ROSTER['기수']);
+        g.current = ROSTER['합계']['동문'] - v.reduce((s, x) => s + x['동문'], 0);
+        g.family  = ROSTER['합계']['동반'] - v.reduce((s, x) => s + x['동반'], 0);
+      }
       const total   = sumOf(regions);
 
       document.getElementById('region-tbody').innerHTML = rowsHtml(regions, total);
