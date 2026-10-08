@@ -496,7 +496,7 @@
           </div>
           <div class="summary-box">
             <div class="summary-label">재학생·학부모·시민·기타</div>
-            <div class="summary-value" id="group-count">210명</div>
+            <div class="summary-value" id="group-count">241명</div>
           </div>
           <div class="summary-box">
             <div class="summary-label">합계</div>
@@ -905,8 +905,8 @@
     const setText = (id, v) => { document.getElementById(id).innerText = v; };
 
     // 기수 숫자를 참석명단(엑셀 정본, 중복 정리됨) 기준으로 맞춘다 — 대표 10/7: 27회로 먼저 실증
-    // 재학생 180 · 학부모 30 · 시민(현장 등록, 사전 0) — 엑셀 동문 명단과 따로 센다(대표 10/7)
-    const GROUP = 180 + 30 + 0;
+    // 재학생 180 · 학부모 30 · 시민 31(10/8 대표) — 엑셀 동문 명단과 따로 센다(대표 10/7)
+    const GROUP = 180 + 30 + 31;
     const ROSTER_GISU = Array.from({ length: 80 }, (_, i) => (i + 1) + '회');  // 10/7: 27회 실증 → 1회 → 1~27회 → 전 기수. 명단에 없으면 0, 눌러도 안내
     // 지회 표·맨 위 카드도 참석명단.json(엑셀 정본)의 합계로 — 시트 지회 이름에 맞춘다
     const ZONE = { '안동': '안동지회', '서울': '재경지회', '대구': '대구지회', '부산': '부산지회', '울산': '울산지회', '대전': '대전지회', '영주': '영주지회', '구미': '구미지회', '창원': '창원지회', '문경': '문경지회', '경주': '경주지회', '안동시청': '안동시청동문회', '기타': '기타' };
