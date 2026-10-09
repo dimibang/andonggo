@@ -111,6 +111,14 @@
       white-space: nowrap;
     }
     .btn-schedule:active { filter: brightness(0.92); }
+    /* 행사 당일 큰 일정안내 버튼 + 요약(10/10 대표) */
+    .sched-box { margin: 0 0 18px; border-radius: 16px; overflow: hidden; background: #ffffff; box-shadow: 0 6px 18px rgba(100, 116, 139, 0.22); }
+    .sched-box .btn-schedule-big { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+      font-size: 1.4rem; font-weight: 800; padding: 18px 16px; border-radius: 0; box-shadow: none; background: #64748b; }   /* 회색(10/10 대표) */
+    .sched-box .btn-schedule-big .go { font-size: 1.6rem; }   /* 좁은 휴대폰용 .btn-schedule 축소 규칙보다 우선 */
+    .sched-sum { padding: 14px 18px 16px; font-size: 1rem; line-height: 1.75; color: var(--text-main); word-break: keep-all; }
+    .sched-sum-title { font-weight: 800; color: #475569; margin-bottom: 4px; }
+    .sched-sum b { color: var(--primary-color); }
     .card-title, .btn-refresh { white-space: nowrap; }
     /* 폭 380px 이하 휴대폰: 제목·버튼 세 개가 한 줄에 들어가도록 줄인다 */
     @media (max-width: 380px) {
@@ -480,10 +488,22 @@
         <span class="go">›</span>
       </a>
 
+      <!-- 행사 당일(10/10 대표): 일정안내를 '전체 참석 현황' 제목 줄에서 꺼내 크게, 아래에 일정 요약 -->
+      <div class="sched-box">
+        <button class="btn-schedule btn-schedule-big" type="button" onclick="openSchedule()">📅 일정안내 <span class="go">›</span></button>
+        <div class="sched-sum">
+          <div class="sched-sum-title">2026.10.10 일정 요약</div>
+          <div>○ 입장과 등록: 동쪽 문</div>
+          <div>○ 식권과 경품권 필히 수령</div>
+          <div><b>10:00~</b> 총회 및 한마음 대회</div>
+          <div><b>15:00~</b> 개교75주년 기념대축제</div>
+          <div>점심: 예미정 뷔페</div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-title">
           <span>📊</span> 전체 참석 현황
-          <button class="btn-schedule" type="button" onclick="openSchedule()"><span class="ico">📅 </span>일정안내</button>
           <button class="btn-refresh" type="button" onclick="refresh()">↻ 새로고침</button>
         </div>
         <div class="summary-grid">
