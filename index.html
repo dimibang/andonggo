@@ -44,7 +44,7 @@
       min-height: 100vh;
       background-color: #f1f5f9;   /* 포스터는 .poster-hero가 위 절반만 보여 준다(행사 당일 10/10 대표) */
       position: relative;
-      padding-bottom: 90px;
+      padding-bottom: 24px;   /* 아래 신청 버튼을 닫아(10/10) 90px → 24px */
       box-shadow: 0 0 25px rgba(0,0,0,0.3);
     }
 
@@ -588,7 +588,8 @@
     </div>
   </div>
 
-  <div class="bottom-bar">
+  <!-- 행사 당일(10/10 대표): 참석 신청 버튼 닫음 — 다시 열려면 아래 hidden 을 지운다 -->
+  <div class="bottom-bar" hidden>
     <a href="https://docs.google.com/forms/d/e/1FAIpQLSd5bh2hdk7dTFFIwamIilL0oMP4k6IyH2mhkoBXNUykuuRoaw/viewform"
        target="_blank"
        class="btn-apply-bottom">
